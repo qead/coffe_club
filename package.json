@@ -1,0 +1,41 @@
+{
+  "name": "coffe_club",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon --watch 'server/**/*' --ext 'ts,js,json' --ignore 'server/**/*.spec.ts,node_modules,.next' --exec 'ts-node --project tsconfig.server.json server/index.ts'",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@typescript-eslint/parser": "^4.8.2",
+    "@zeit/next-sass": "^1.0.1",
+    "antd": "^4.8.5",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.5",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.9.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.11.9",
+    "next": "^10.0.9",
+    "node-sass": "^5.0.0",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-redux": "^7.2.2",
+    "redux": "^4.0.5",
+    "redux-devtools-extension": "^2.13.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.9",
+    "@types/node": "^14.14.10",
+    "@types/react": "^17.0.0",
+    "eslint": "^7.14.0",
+    "nodemon": "^2.0.20",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.1.2"
+  }
+}
