@@ -24,16 +24,18 @@ router.post(
 					message: 'Некорректные данные при регистрации'
 				});
 			}
-			const { email, password, name, surname, birthDate } = req.body;
-			console.log('email, password, name, surname, birthDate', email, password, name, surname, birthDate);
+			const { email, password, name, surname, birthDate, referralLink } = req.body;
 			const candidate = await User.findOne({ email });
-			console.log('candidate', candidate);
 			if (candidate) {
 				return res.status(400).json({ type: 'warning', message: 'Такой пользователь уже существует' });
 			}
-			
+			const referral = await User.findOne({_id:referralLink});
+			if (!referral) {
+				console.log('Попытка регистрация с несущетсвующимм рефералом', referralLink);
+				return res.status(400).json({ type: 'warning', message: 'Укажите корректный id реферала'});
+			}
 			let hashedPass = await bcrypt.hash(password, 5);
-			let user = await new User({ email, name, surname, birthDate, password: hashedPass });
+			let user = await new User({ email, name, surname, birthDate, password: hashedPass, referralLink });
 			await user.save();
 			res.json({ type: 'success', message: 'Пользователь успешно зарегистирован' });
 		} catch (err) {

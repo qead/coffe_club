@@ -1,5 +1,9 @@
 {
     "watch": ["server"],
-    "exec": "node server/index.ts",
-    "ext": "js ts"
+    "exec": "ts-node --project tsconfig.server.json server/index.ts",
+    "ext": "js ts",
+    "ignore": "server/**/*.spec.ts,node_modules,.next",
+    "execMap": {
+        "ts": "ts-node"
+    }
   }

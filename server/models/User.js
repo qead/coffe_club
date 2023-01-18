@@ -6,7 +6,7 @@ const schema = new Schema({
 	email:{type: String, required:true, unique:true},
 	password:{type: String, required:true},
 	birthDate:{type: String, required:true},
-	referralLink:[{type:Types.ObjectId, ref: 'Requests'}]
+	referralLink:{type:Types.ObjectId}
 });
 
 module.exports=model('User', schema);
