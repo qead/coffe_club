@@ -1,86 +1,76 @@
 import { useSelector } from 'react-redux';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-	Form,
+	Tree,
 	Input,
 	Row,
 	Col,
-	Checkbox,
+	Tooltip,
 	DatePicker,
-	Button
+	Button,
+	message
 } from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
 import MainLayout from '../components/Layout';
+import getJson from '../utils/getJson';
+import copyText from '../utils/copyText';
+import moment from 'moment';
+import GetRefs from '../components/profile/GetRefs';
+
+
 export default function Profile(ctx) {
 	const isAuth = useSelector((state) => state.isAuth);
+	const [state, setState] = useState ([]); 
+	useEffect ( async() => {
+		const userInfo = await getJson('/api/profile/getUser');
+		if(userInfo?.result){
+		 	setState(userInfo.result);
+		}
+	}, [] );
 	if(isAuth){
 		return (
 			<MainLayout>
 				<h1>Профиль</h1>
-				<Form
-					name="register"
-					scrollToFirstError
-				>
-					<Row gutter={16}>
-						<Col span={12}>
-							<Form.Item
-								name="name"
-								rules={[
-									{
-										required: true,
-										message: 'Введите ваше имя!'
-									}
-								]}
-							>
-								<Input placeholder="Ваше Имя" />
-							</Form.Item>
-						</Col>
-						<Col span={12}>
-							<Form.Item
-								name="surname"
-								rules={[
-									{
-										required: true,
-										message: 'Введите вашу фамилию!'
-									}
-								]}
-							>
-								<Input placeholder="Ваша Фамилия" />
-							</Form.Item>
-						</Col>
-					</Row>
-					<Row gutter={16}>
-						<Col span={12}>
-							<Form.Item
-								name="birthDate"
-								rules={[
-									{
-										required: true,
-										message: 'Введите вашу дату рождения!'
-									}
-								]}
-							>
-								<DatePicker placeholder='Дата своего рождения' style={{width:'100%'}}/>
-							</Form.Item>
-						</Col>
-						<Col span={12}>
-							<Form.Item
-								name="email"
-								rules={[
-									{
-										type: 'email',
-										message: 'Введите корректный E-mail!'
-									},
-									{
-										required: true,
-										message: 'Введите ваш E-mail!'
-									}
-								]}
-							>
-								<Input placeholder="E-mail" />
-							</Form.Item>
-						</Col>
-					</Row>
-				</Form>
+				<Row gutter={16}>
+					<Col span={12} >
+						<div className="site-input-group-wrapper">
+							<Input.Group>
+								<p>Реферальная ссылка</p>
+								<Input
+									style={{ width: 'calc(100% - 32px)' }}
+									value={`/register?referrer=${state._id}`}
+								/>
+								<Tooltip title="Скопировать реф. ссылку">
+									<Button icon={<CopyOutlined />} onClick={()=>copyText(`/register?referrer=${state._id}`, message)}/>
+								</Tooltip>
+							</Input.Group>
+							<br/>
+							<Input.Group>
+								<p>Ваше Имя</p>
+								<Input value={state.name}/>
+							</Input.Group>
+							<br/>
+							<Input.Group>
+								<p>Ваша Фамилия</p>
+								<Input value={state.surname} />
+							</Input.Group>
+							<br/>
+							<Input.Group>
+								<p>Ваша Дата рождения</p>
+								<span>{moment(state.birthDate).format('YYYY/MM/DD')}</span>
+							</Input.Group>
+							<br/>
+							<Input.Group>
+								<p>Ваш E-mail</p>
+								<Input value={state.email} />
+							</Input.Group>
+						</div>
+					</Col>
+					<Col span={12}>
+						<h2>Ваши рефералы</h2>
+						<GetRefs />
+					</Col>
+				</Row>
 			</MainLayout>);
 	}
 	return (<MainLayout>
@@ -91,14 +81,14 @@ export const getServerSideProps = async function ({ req, res }){
 	// Get the user's session based on the request
 	const isAuth = !!req?.cookies?.token;
 	if (!isAuth) {
-	  return {
+		return {
 			redirect: {
 				destination: '/login',
 				permanent: false
 			}
-	  };
+		};
 	}
 	return {
-	  props: {isAuth}
+		props: {isAuth}
 	};
 };

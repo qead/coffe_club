@@ -8,7 +8,8 @@ import {
 	Checkbox,
 	DatePicker,
 	Button,
-	message
+	message,
+	Alert
 } from 'antd';
 const tailFormItemLayout = {
 	wrapperCol: {
@@ -24,6 +25,8 @@ const tailFormItemLayout = {
 };
 export default function RegistrationForm({closeModal}){
 	const [loading, setLoading] = useState(false);
+	const [referral, setReferral] = useState(null);
+	const [referralInfo, setReferralInfo] = useState(null);
 	let onFinish = async values => {
 		console.log('values', values);
 		setLoading(true);
@@ -36,6 +39,28 @@ export default function RegistrationForm({closeModal}){
 			console.error('Ошибка при регистрации пользователя:', err);
 		}
 		setLoading(false);
+	};
+	let checkRefferal = async () =>{
+		if(!referral){
+			return;
+		}
+		setLoading(true);
+		setReferralInfo(null);
+		try {
+			let {result} = await getJson('/api/user/getReferral', {id: referral});
+			console.log('res', result);
+			if(!result?.name || !result?.surname){
+				throw new Error('Отсутсвуют обязательные поля реферала');
+			}
+			setReferralInfo(result);
+		} catch (err) {
+			console.error('Ошибка при получении информации о реферале:', err);
+		}
+		setLoading(false);
+
+	};
+	let changeRef = (e) =>{
+		setReferral(e.target.value);
 	};
 	return <Form
 		name="register"
@@ -124,6 +149,33 @@ export default function RegistrationForm({closeModal}){
 			]}
 		>
 			<Input.Password placeholder="Подтвердите пароль" />
+		</Form.Item>
+
+		<Form.Item extra="Согласно нашей политике, регистрация только с помощью рефералов">
+			<Row gutter={8}>
+				<Col sm={16} xs={10}>
+					<Form.Item
+						name="referralLink"
+						rules={[
+							{ required: true, message: 'Пожалуйста укажите реферала!' },
+							() => ({
+								validator(rule, value) {
+									if (value.length==24) {
+										return Promise.resolve();
+									}
+									return Promise.reject('Пароли не совпадают!');
+								}
+							})
+						]}
+					>
+						<Input placeholder="Реферальная ссылка" value={referral} onChange={changeRef}/>
+					</Form.Item>
+					{(referralInfo?.name&&referralInfo?.surname)&&<span>имя и фамилия реф-ла: {referralInfo.name} {referralInfo.surname}</span>}
+				</Col>
+				<Col sm={8} xs={14}>
+					<Button style={{ width: '100%' }} type="primary" onClick={checkRefferal} loading={loading}>Проверить</Button>
+				</Col>
+			</Row>
 		</Form.Item>
 
 		<Form.Item extra="Мы должны убедиться что Вы человек">
