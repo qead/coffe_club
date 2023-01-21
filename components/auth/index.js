@@ -64,7 +64,8 @@ export default function Auth({isMobile}){
 			setShowModal({ content: <Login closeModal={closeModal} />, modalProps: { title: 'Авторизация' }});
 			break;
 		case 'register':
-			setShowModal({ content: <Register closeModal={closeModal} />, modalProps: { title: 'Регистрация' }});
+			router.push('/register');
+			// setShowModal({ content: <Register closeModal={closeModal} />, modalProps: { title: 'Регистрация' }});
 			break;
 		case 'quit':
 			logout();

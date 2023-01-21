@@ -46,6 +46,16 @@ export default function Profile(ctx) {
 							</Input.Group>
 							<br/>
 							<Input.Group>
+								<p>Ваша страна</p>
+								<Input value={state.country}/>
+							</Input.Group>
+							<br/>
+							<Input.Group>
+								<p>Ваш город</p>
+								<Input value={state.city}/>
+							</Input.Group>
+							<br/>
+							<Input.Group>
 								<p>Ваше Имя</p>
 								<Input value={state.name}/>
 							</Input.Group>
@@ -63,6 +73,11 @@ export default function Profile(ctx) {
 							<Input.Group>
 								<p>Ваш E-mail</p>
 								<Input value={state.email} />
+							</Input.Group>
+							<br/>
+							<Input.Group>
+								<p>Ваш номер телефона</p>
+								<Input value={state.tel}/>
 							</Input.Group>
 						</div>
 					</Col>

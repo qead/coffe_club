@@ -25,16 +25,7 @@ const useCounter = () => {
 export default function Home(props):JSX.Element {
 	const { count, increment, decrement, reset } = useCounter();
 	return (<MainLayout>
-		<h1>Home</h1>
-		<pre>{JSON.stringify(reduxStore.getState())}</pre>
-		<Button onClick={()=>dispatch({
-			type: 'SET_TOKEN',
-			token: 'idite vse nahui'
-		})}>DISPATCH</Button>
-		<h1>{count}</h1>
-		<Button onClick={increment}>+1</Button>
-		<Button onClick={decrement}>-1</Button>
-		<Button onClick={reset}>reset</Button>
+		<h1>clubofcoffe.shop</h1>
 	</MainLayout>);
 }
 export function getServerSideProps() {

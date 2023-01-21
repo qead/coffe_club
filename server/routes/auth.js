@@ -24,7 +24,7 @@ router.post(
 					message: 'Некорректные данные при регистрации'
 				});
 			}
-			const { email, password, name, surname, birthDate, referralLink } = req.body;
+			const { email, password, name, surname, birthDate, referralLink, country, city, tel } = req.body;
 			const candidate = await User.findOne({ email });
 			if (candidate) {
 				return res.status(400).json({ type: 'warning', message: 'Такой пользователь уже существует' });
@@ -35,7 +35,7 @@ router.post(
 				return res.status(400).json({ type: 'warning', message: 'Укажите корректный id реферала'});
 			}
 			let hashedPass = await bcrypt.hash(password, 5);
-			let user = await new User({ email, name, surname, birthDate, password: hashedPass, referralLink });
+			let user = await new User({ email, name, surname, birthDate, password: hashedPass, referralLink, country, city, tel });
 			await user.save();
 			res.json({ type: 'success', message: 'Пользователь успешно зарегистирован' });
 		} catch (err) {

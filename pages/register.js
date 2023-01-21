@@ -11,7 +11,8 @@ import {
 	DatePicker,
 	Button,
 	message,
-	Alert
+	Alert,
+	InputNumber
 } from 'antd';
 const tailFormItemLayout = {
 	wrapperCol: {
@@ -36,9 +37,16 @@ export default function RegistrationForm(){
 		delete values.agreement;
 		delete values.confirm;
 		try {
-			await getJson('/api/auth/register', values, message);
+			let res = await getJson('/api/auth/register', values, message);
+			if(res.status==200){
+				message.success('Пользователь успешно зарегистрирован');
+				setTimeout(()=>router.push('/login'),1500);
+			}else{
+				throw new Error(res.message||'Неизвестная ошибка');
+			}
 		} catch (err) {
 			console.error('Ошибка при регистрации пользователя:', err);
+			message.error(err);
 		}
 		setLoading(false);
 	};
@@ -95,6 +103,39 @@ export default function RegistrationForm(){
 				]}
 			>
 				<Input placeholder="Ваша Фамилия" />
+			</Form.Item>
+			<Form.Item
+				name="tel"
+				rules={[
+					{
+						required: true,
+						message: 'Введите ваш телефонныый номер'
+					}
+				]}
+			>
+				<InputNumber placeholder="+7  999 999 99 99" controls={false} style={{width:'100%'}}/>
+			</Form.Item>
+			<Form.Item
+				name="country"
+				rules={[
+					{
+						required: true,
+						message: 'Введите вашу страну'
+					}
+				]}
+			>
+				<Input style={{width:'100%'}} placeholder="Ваша страна"/>
+			</Form.Item>
+			<Form.Item
+				name="city"
+				rules={[
+					{
+						required: true,
+						message: 'Введите ваш город'
+					}
+				]}
+			>
+				<Input style={{width:'100%'}}  placeholder="Ваш город"/>
 			</Form.Item>
 			<Form.Item
 				name="birthDate"
@@ -228,7 +269,7 @@ export const getServerSideProps = async function ({ req, res }){
 	if (isAuth) {
 	  return {
 			redirect: {
-				destination: '/',
+				destination: '/profile',
 				permanent: false
 			}
 	  };

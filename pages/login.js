@@ -3,9 +3,13 @@ import MainLayout from '../components/Layout';
 import {message, Button, Form, Input, Checkbox} from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
+import { useRouter } from 'next/router';
+
 import getJson from '../utils/getJson';
 
 export default function Login(){
+	
+	const router = useRouter();
 	const [loading, setLoading] = useState(false);
 	const dispatch = useDispatch();
 	let onFinish = async(values) => {
@@ -14,6 +18,7 @@ export default function Login(){
 			let response = await getJson('/api/auth/login',values,message);
 			if(response.status==200){
 				dispatch({type:'LOGIN'});
+				router.push('/profile');
 			}
 		} catch (error) {
 			console.log('error:', error);
@@ -23,6 +28,7 @@ export default function Login(){
 	};
 	return (
 		<MainLayout>
+			<h1>Страница авторизации</h1>
 			<Form
 				name="normal_login"
 				initialValues={{'remember': true}}
@@ -73,3 +79,18 @@ export default function Login(){
 			</Form>
 		</MainLayout>);
 }
+export const getServerSideProps = async function ({ req, res }){
+	// Get the user's session based on the request
+	const isAuth = !!req?.cookies?.token;
+	if (isAuth) {
+	  return {
+			redirect: {
+				destination: '/profile',
+				permanent: false
+			}
+	  };
+	}
+	return {
+	  props: {isAuth}
+	};
+};
