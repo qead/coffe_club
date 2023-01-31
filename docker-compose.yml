@@ -1,0 +1,32 @@
+version: '3.1'
+services:
+  database:
+    image: mongo
+    container_name: 'database'
+    restart: always
+    volumes:
+      - ./coffe:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: coffe_club
+      MONGO_INITDB_ROOT_PASSWORD: E0d2HM7P0Gxdz9Mq
+    networks:
+      - dev
+  web:
+    image: appv3
+    сontainer_name: 'web'
+    ports:
+      - "80:3000"
+      - "443:3000"
+    command: npm run start
+    environment:
+      - cookieSecret=lZp2orT
+      - jwtSecret=jWtsZ0rkM
+      - salt=cLuBoflzM1
+      - dbhost=database
+    networks:
+      - dev 
+networks:
+  dev:
+    driver: bridge
