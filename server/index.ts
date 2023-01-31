@@ -4,13 +4,13 @@ import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import routes from './routes';
 import getCfgValue from './utils/getConfigValue';
-const dev = getCfgValue('isDev');// process.env.NODE_ENV !== 'production';
+const dev = process.env.NODE_ENV !== 'production';
 const PORT = getCfgValue('PORT');//process.env.PORT;
 const mongoPORT=getCfgValue('mongodb.port');
 const mongoUSER = getCfgValue('mongodb.username');
 const mongoPASSWORD = getCfgValue('mongodb.password');
-const mongoUri = 'mongodb://localhost:'+mongoPORT;//getCfgValue('mongoUri');//process.env.mongoUri;
-const cookieSecret = getCfgValue('cookieSecret');
+const mongoUri = `mongodb://${process.env.dbhost||'localhost'}:${mongoPORT}`;//getCfgValue('mongoUri');//process.env.mongoUri;
+const cookieSecret = process.env.cookieSecret;
 const app = next({ dev });
 const handle = app.getRequestHandler();
 (async () => {

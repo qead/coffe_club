@@ -7,12 +7,13 @@ const day = 86400; //seconds in 1 day
 const mounth = 2592000; //seconds in 1 mounth
 const User = require('../models/User');
 const jwtValidator = require('../utils/jwtValidator');
+import transporter from '../utils/nodemailer';
 // api/auth
 router.post(
 	'/register',
 	[
 		check('email', 'Некорректный email').isEmail(),
-		check('password', 'Минимальная длина пароля 6 символов').isLength({ min: 6 })
+		// check('password', 'Минимальная длина пароля 6 символов').isLength({ min: 6 })
 	],
 	async (req, res) => {
 		console.group('Процесс регистрации');
@@ -24,7 +25,7 @@ router.post(
 					message: 'Некорректные данные при регистрации'
 				});
 			}
-			const { email, password, name, surname, birthDate, referralLink, country, city, tel } = req.body;
+			const { email, name, surname, birthDate, referralLink, country, city, tel } = req.body;
 			const candidate = await User.findOne({ email });
 			if (candidate) {
 				return res.status(400).json({ type: 'warning', message: 'Такой пользователь уже существует' });
@@ -34,13 +35,21 @@ router.post(
 				console.log('Попытка регистрация с несущетсвующимм рефералом', referralLink);
 				return res.status(400).json({ type: 'warning', message: 'Укажите корректный id реферала'});
 			}
+			let password = '123456';
 			let hashedPass = await bcrypt.hash(password, 5);
 			let user = await new User({ email, name, surname, birthDate, password: hashedPass, referralLink, country, city, tel });
+			await transporter.sendMail({
+				from: '"Клуб любителей кофе! clubofcoffe.shop" <coffe_club@bk.ru>',
+				to: email,
+				subject: 'Поздравляем с регистрацией!',
+				html: 'Благодарим за участие в нашем проекте! Данные для входа на наш <a href="https://clubofcoffe.shop" target="_blank">сайт</a>: <br> <ul><li>Логин (email): '+email+'</li><li>Пароль: '+password+'</li>'
+			});
 			await user.save();
 			res.json({ type: 'success', message: 'Пользователь успешно зарегистирован' });
 		} catch (err) {
 			console.log('err:', err);
-			res.status(500).end('Что-то пошло не так');
+			res.status(500).json({ type: 'error', message: 'Что-то пошло не так' });
+			// res.status(500).end('Что-то пошло не так');
 		}
 		console.groupEnd();
 	});

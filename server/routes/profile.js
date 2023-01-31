@@ -35,7 +35,6 @@ router.use('/getRefs', async(req,res)=>{
 	try {
 		let id = req.body.id || jwt.verify(req.cookies.token,process.env.jwtSecret).userId;
 		let users = await User.find({referralLink:id},{__v:0, password:0, referralLink:0}).lean();
-		console.log('user', users);
 		res.json(users);
 		// res.end();
 	} catch (error) {

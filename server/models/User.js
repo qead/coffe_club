@@ -5,7 +5,7 @@ const schema = new Schema({
 	surname:{type: String, required:true},
 	tel:{type: String, required:true},
 	country:{type: String, required:true},
-	city:{type: String, required:true},
+	city:{type: String},
 	email:{type: String, required:true, unique:true},
 	password:{type: String, required:true},
 	birthDate:{type: String, required:true},
