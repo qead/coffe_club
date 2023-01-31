@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message, Tree } from  'antd';
+import  {DownOutlined} from  '@ant-design/icons';
 import getJson from '../../utils/getJson';
 
 const updateTreeData = (list, key, children) => list.map((node) => {
@@ -59,9 +60,11 @@ export default function GetRefs(ctx) {
 			{userData.map((item,i)=><li key={i}>{item}</li>)}
 		</ul>}
 		<Tree fieldNames={{
-			title: 'email',
+			title: 'surname',
 			key: '_id'
 		}}
+		showLine
+		switcherIcon={<DownOutlined />}
 		loadData={onLoadData}
 		treeData={treeData}
 		onSelect={onSelect}

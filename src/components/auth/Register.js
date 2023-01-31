@@ -170,7 +170,6 @@ export default function RegistrationForm({closeModal}){
 					>
 						<Input placeholder="Реферальная ссылка" value={referral} onChange={changeRef}/>
 					</Form.Item>
-					{(referralInfo?.name&&referralInfo?.surname)&&<span>имя и фамилия реф-ла: {referralInfo.name} {referralInfo.surname}</span>}
 				</Col>
 				<Col sm={8} xs={14}>
 					<Button style={{ width: '100%' }} type="primary" onClick={checkRefferal} loading={loading}>Проверить</Button>

@@ -1,0 +1,48 @@
+import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
+import {
+	Tree,
+	Input,
+	Row,
+	Col,
+	Tooltip,
+	DatePicker,
+	Button,
+	message
+} from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
+import MainLayout from '../../components/Layout';
+import getJson from '../../utils/getJson';
+import copyText from '../../utils/copyText';
+import moment from 'moment';
+import GetRefs from '../../components/profile/GetRefs';
+
+
+export default function Profile(ctx) {
+	const isAuth = useSelector((state) => state.isAuth);
+	if(isAuth){
+		return (
+			<MainLayout>
+				<h1>Ваши рефералы</h1>
+				<GetRefs />
+			</MainLayout>);
+	}
+	return (<MainLayout>
+		<h1>Страница для авторизованных пользователей</h1>
+	</MainLayout>);
+}
+export const getServerSideProps = async function ({ req, res }){
+	// Get the user's session based on the request
+	const isAuth = !!req?.cookies?.token;
+	if (!isAuth) {
+		return {
+			redirect: {
+				destination: '/login',
+				permanent: false
+			}
+		};
+	}
+	return {
+		props: {isAuth}
+	};
+};

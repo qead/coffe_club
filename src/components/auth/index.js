@@ -1,9 +1,9 @@
 import { useRouter } from 'next/router';
-import { Button, message } from 'antd';
+import { Button, Space, message } from 'antd';
 import { useState,useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Login from './Login';
-import Register from './Register';
+// import Register from './Register';
 import ModalProp from '../../utils/ModalProp';
 import { LoginOutlined, UserAddOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { initializeStore } from '../../store';
@@ -86,20 +86,22 @@ export default function Auth({isMobile}){
 				bodyStyle: { paddingBottom: 0 }
 			}})
 		}
-    	<Button
-			loading={loading}
-    		icon={isAuth ? <UserOutlined /> : < UserAddOutlined />}
-    		className="row-item-m5"
-    		onClick={() => onClick(isAuth ? 'profile' : 'login')}>
-    		{!isMobile&&(isAuth ? 'Профиль' : 'Войти')}
-    	</Button>
-    	<Button
-			loading={loading}
-    		icon={isAuth ? <LogoutOutlined /> : <LoginOutlined />}
-    		type={isAuth ? 'danger' : 'primary'}
-    		className="row-item-m5"
-    		onClick={() => onClick(isAuth ? 'quit' : 'register')}>
-    		{!isMobile&&(isAuth ? 'Выйти' : 'Регистрация')}
-    	</Button>
+		<Space direction="horizontal" wrap style={{padding:'0 5px'}}>
+			<Button
+				loading={loading}
+				icon={isAuth ? <UserOutlined /> : < UserAddOutlined />}
+				className="row-item-m5"
+				onClick={() => onClick(isAuth ? 'profile' : 'login')}>
+				{!isMobile&&(isAuth ? 'Профиль' : 'Войти')}
+			</Button>
+			<Button
+				loading={loading}
+				icon={isAuth ? <LogoutOutlined /> : <LoginOutlined />}
+				type={isAuth ? 'danger' : 'primary'}
+				className="row-item-m5"
+				onClick={() => onClick(isAuth ? 'quit' : 'register')}>
+				{!isMobile&&(isAuth ? 'Выйти' : 'Регистрация')}
+			</Button>
+		</Space>
 	</>;
 }

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+
 import getJson from '../utils/getJson';
 import MainLayout from '../components/Layout';
+import PhoneInput from '../components/PhoneInput';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import {
 	Form,
 	Input,
@@ -12,8 +15,13 @@ import {
 	Button,
 	message,
 	Alert,
-	InputNumber
+	InputNumber,
+	Select
 } from 'antd';
+import countries from '../lib/countries.json';
+// import CountryPhoneInput, { ConfigProvider } from 'antd-country-phone-input';
+// import en from 'world_countries_lists/data/countries/en/world.json';
+
 const tailFormItemLayout = {
 	wrapperCol: {
 		xs: {
@@ -31,15 +39,12 @@ export default function RegistrationForm(){
 	const {referrer} = router.query;
 	const [loading, setLoading] = useState(false);
 	const [referral, setReferral] = useState(null);
-	const [referralInfo, setReferralInfo] = useState(null);
 	let onFinish = async values => {
 		setLoading(true);
 		delete values.agreement;
-		delete values.confirm;
 		try {
 			let res = await getJson('/api/auth/register', values, message);
 			if(res.status==200){
-				message.success('Пользователь успешно зарегистрирован');
 				setTimeout(()=>router.push('/login'),1500);
 			}else{
 				throw new Error(res.message||'Неизвестная ошибка');
@@ -50,24 +55,6 @@ export default function RegistrationForm(){
 		}
 		setLoading(false);
 	};
-	let checkRefferal = async () =>{
-		if(!referral){
-			return;
-		}
-		setLoading(true);
-		setReferralInfo(null);
-		try {
-			let {result} = await getJson('/api/user/getReferral', {id: referral}, message);
-			if(!result?.name || !result?.surname){
-				throw new Error('Отсутсвуют обязательные поля реферала');
-			}
-			setReferralInfo(result.name+' '+result.surname);
-		} catch (err) {
-			console.error('Ошибка при получении информации о реферале:', err);
-		}
-		setLoading(false);
-
-	};
 	let changeRef = (e) =>{
 		setReferral(e.target.value);
 	};
@@ -75,47 +62,74 @@ export default function RegistrationForm(){
 		<h1>Страница регистрации</h1>
 		<Form
 			name="register"
+			layout="vertical"
 			onFinish={onFinish}
 			scrollToFirstError
 			loading={loading+''}
-			initialValues={referrer&&{
-				'referralLink': referrer
+			initialValues={{
+				'country': 'Russian Federation',
+				'referralLink': referrer || null
 			}}
+			style={{maxWidth:'500px', margin:'25px 0'}}
 		>
+			<Alert
+				message={referrer?'Успешно':'Внимание'}
+				description={referrer?'Поздравляем, кажется вы перешли по реферальной ссылке':'Отсутствуют данные реферала перейдите по ссылке для регистрации или введите айди вручную'}
+				type={referrer?'success':'warning'}
+				showIcon
+				style={{marginBottom:'25px'}}
+			/>
 			<Form.Item
 				name="name"
+				label="Ваше имя"
 				rules={[
 					{
 						required: true,
 						message: 'Введите ваше имя!'
+					},
+					{
+						validator: (_, value) =>!value.includes(' ')? Promise.resolve(): Promise.reject(new Error('Уберите пустые пробелы из поля для ввода'))
 					}
 				]}
 			>
-				<Input placeholder="Ваше Имя" />
+				<Input placeholder="Иван" />
 			</Form.Item>
 			<Form.Item
 				name="surname"
+				label="Ваша фамилия"
 				rules={[
 					{
 						required: true,
 						message: 'Введите вашу фамилию!'
+					},
+					{
+						validator: (_, value) =>!value.includes(' ')? Promise.resolve(): Promise.reject(new Error('Уберите пустые пробелы из поля для ввода'))
 					}
 				]}
 			>
 				<Input placeholder="Ваша Фамилия" />
 			</Form.Item>
-			<Form.Item
+			<PhoneInput />
+			{/* <Form.Item
 				name="tel"
+				label="Ваш номер телефона"
 				rules={[
 					{
 						required: true,
-						message: 'Введите ваш телефонныый номер'
+						message: 'Введите ваш телефонный номер'
+					},
+					{
+						len: 10,
+						message: 'Номер телефона БЕЗ +7 (кода страны)'
 					}
 				]}
 			>
-				<InputNumber placeholder="+7  999 999 99 99" controls={false} style={{width:'100%'}}/>
-			</Form.Item>
+				 <ConfigProvider locale={en}>
+					<CountryPhoneInput />
+				</ConfigProvider> 
+			</Form.Item> */}
 			<Form.Item
+				label="Выберите вашу страну"
 				name="country"
 				rules={[
 					{
@@ -124,9 +138,14 @@ export default function RegistrationForm(){
 					}
 				]}
 			>
-				<Input style={{width:'100%'}} placeholder="Ваша страна"/>
+				<Select
+					showSearch
+					style={{width:'100%'}}
+					options={countries}
+				/>
+				{/* <Input style={{width:'100%'}} placeholder="Росси"/> */}
 			</Form.Item>
-			<Form.Item
+			{/* <Form.Item
 				name="city"
 				rules={[
 					{
@@ -136,8 +155,9 @@ export default function RegistrationForm(){
 				]}
 			>
 				<Input style={{width:'100%'}}  placeholder="Ваш город"/>
-			</Form.Item>
+			</Form.Item> */}
 			<Form.Item
+				label="Дата вашего рождения"
 				name="birthDate"
 				rules={[
 					{
@@ -146,9 +166,10 @@ export default function RegistrationForm(){
 					}
 				]}
 			>
-				<DatePicker placeholder='Дата своего рождения'  />
+				<DatePicker placeholder='дд.мм.гггг' format='DD.MM.YYYY' style={{width:'100%'}}/>
 			</Form.Item>
 			<Form.Item
+				label="Ваша электронная почта"
 				name="email"
 				rules={[
 					{
@@ -158,13 +179,16 @@ export default function RegistrationForm(){
 					{
 						required: true,
 						message: 'Введите ваш E-mail!'
+					},
+					{
+						validator: (_, value) =>!value.includes(' ')? Promise.resolve(): Promise.reject(new Error('Уберите пустые пробелы из поля для ввода'))
 					}
 				]}
 			>
 				<Input placeholder="E-mail" />
 			</Form.Item>
 
-			<Form.Item
+			{/* <Form.Item
 				name="password"
 				rules={[
 					{
@@ -196,52 +220,47 @@ export default function RegistrationForm(){
 				]}
 			>
 				<Input.Password placeholder="Подтвердите пароль" />
-			</Form.Item>
+			</Form.Item> */}
 
-			<Form.Item extra="Согласно нашей политике, регистрация только с помощью рефералов">
-				<Row gutter={8}>
-					<Col sm={16} xs={10}>
-						<Form.Item
-							name="referralLink"
-							noStyle
-							rules={[
-								{ required: true, message: 'Пожалуйста укажите реферала!' },
-								({ getFieldValue }) => ({
-									validator(rule, value) {
-										if (!value || 24 === value.length) {
-											return Promise.resolve();
-										}
-										return Promise.reject('Введите корректный id');
-									}
-								})
-							]}
-						>
-							<Input value={referral} onChange={changeRef}/>
-						</Form.Item>
-						{/* {(referralInfo?.length)&&<span>имя и фамилия реф-ла: {referralInfo}</span>} */}
-					</Col>
-					<Col sm={8} xs={14}>
-						<Button style={{ width: '100%' }} type="primary" onClick={checkRefferal} loading={loading}>Проверить</Button>
-					</Col>
-				</Row>
+			{/* <Form.Item extra="Мы должны убедиться что Вы человек">
+					<Row gutter={8}>
+						<Col sm={16} xs={10}>
+							<Form.Item
+								noStyle
+								rules={[{ required: true, message: 'Пожалуйста введите капчу!' }]}
+							>
+								<Input placeholder="Капча" />
+							</Form.Item>
+						</Col>
+						<Col sm={8} xs={14}>
+							<Button style={{ width: '100%' }} type="primary">Получить капчу</Button>
+						</Col>
+					</Row>
+				</Form.Item> */}
+			
+			<Form.Item extra="Согласно нашей политике, регистрация только с помощью рефералов, если вы перешли по реферальной ссылке не меняйте даннное значение">
+				<Form.Item
+					label={referrer?"Реферальный код уже успешно введен!":"Реферальный код"}
+					name="referralLink"
+					rules={[
+						{ required: true, message: 'Пожалуйста укажите реферала!' },
+						({ getFieldValue }) => ({
+							validator(rule, value) {
+								if (!value || 24 === value.length) {
+									return Promise.resolve();
+								}
+								return Promise.reject('Введите корректный id');
+							}
+						})
+					]}
+				>
+					<Input disabled={referrer} value={referral} onChange={changeRef}  style={{width:'100%'}}/>
+				</Form.Item>
+				{/* {(referralInfo?.length)&&<span>имя и фамилия реф-ла: {referralInfo}</span>} */}
+				{/* <Col sm={8} xs={14}>
+							<Button style={{ width: '100%' }} type="primary" onClick={checkRefferal} loading={loading}>Проверить</Button>
+						</Col> */}
 			</Form.Item>
-
-			<Form.Item extra="Мы должны убедиться что Вы человек">
-				<Row gutter={8}>
-					<Col sm={16} xs={10}>
-						<Form.Item
-							noStyle
-							rules={[{ required: true, message: 'Пожалуйста введите капчу!' }]}
-						>
-							<Input placeholder="Капча" />
-						</Form.Item>
-					</Col>
-					<Col sm={8} xs={14}>
-						<Button style={{ width: '100%' }} type="primary">Получить капчу</Button>
-					</Col>
-				</Row>
-			</Form.Item>
-
 			<Form.Item
 				name="agreement"
 				valuePropName="checked"
@@ -251,12 +270,12 @@ export default function RegistrationForm(){
 				{...tailFormItemLayout}
 			>
 				<Checkbox>
-					Я согласен с условиями <a href="">соглашения</a>
+						Я согласен с условиями <Link href="/terms">соглашения</Link>
 				</Checkbox>
 			</Form.Item>
 			<Form.Item {...tailFormItemLayout}>
 				<Button type="primary" htmlType="submit">
-					Зарегистрироваться
+						Зарегистрироваться
 				</Button>
 			</Form.Item>
 		</Form>
