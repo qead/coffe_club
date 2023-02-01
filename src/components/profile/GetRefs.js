@@ -63,8 +63,11 @@ export default function GetRefs(ctx) {
 			title: 'surname',
 			key: '_id'
 		}}
+		style={{overflowX:'auto'}}
+		className="refTree"
 		showLine
-		switcherIcon={<DownOutlined />}
+		showIcon
+		switcherIcon={<DownOutlined  width={32} height={32} style={{ fontSize: '150%', padding:'5px 10px 0 0'}}/>}
 		loadData={onLoadData}
 		treeData={treeData}
 		onSelect={onSelect}

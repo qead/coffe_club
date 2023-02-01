@@ -12,7 +12,7 @@ import transporter from '../utils/nodemailer';
 router.post(
 	'/register',
 	[
-		check('email', 'Некорректный email').isEmail(),
+		check('email', 'Некорректный email').isEmail()
 		// check('password', 'Минимальная длина пароля 6 символов').isLength({ min: 6 })
 	],
 	async (req, res) => {
@@ -26,7 +26,8 @@ router.post(
 				});
 			}
 			const { email, name, surname, birthDate, referralLink, country, city, tel } = req.body;
-			const candidate = await User.findOne({ email });
+			let lowerEmail = email.toLowerCase();
+			const candidate = await User.findOne({ email:lowerEmail });
 			if (candidate) {
 				return res.status(400).json({ type: 'warning', message: 'Такой пользователь уже существует' });
 			}
@@ -37,12 +38,12 @@ router.post(
 			}
 			let password = '123456';
 			let hashedPass = await bcrypt.hash(password, 5);
-			let user = await new User({ email, name, surname, birthDate, password: hashedPass, referralLink, country, city, tel });
+			let user = await new User({ email: lowerEmail, name, surname, birthDate, password: hashedPass, referralLink, country, city, tel });
 			await transporter.sendMail({
 				from: '"Клуб любителей кофе! clubofcoffe.shop" <coffe_club@bk.ru>',
-				to: email,
+				to: lowerEmail,
 				subject: 'Поздравляем с регистрацией!',
-				html: 'Благодарим за участие в нашем проекте! Данные для входа на наш <a href="https://clubofcoffe.shop" target="_blank">сайт</a>: <br> <ul><li>Логин (email): '+email+'</li><li>Пароль: '+password+'</li>'
+				html: 'Благодарим за участие в нашем проекте! Данные для входа на наш <a href="https://clubofcoffe.shop" target="_blank">сайт</a>: <br> <ul><li>Логин (email): '+lowerEmail+'</li><li>Пароль: '+password+'</li>'
 			});
 			await user.save();
 			res.json({ type: 'success', message: 'Пользователь успешно зарегистирован' });
@@ -71,7 +72,8 @@ router.post(
 				});
 			}
 			const { email, password, remember } = req.body;
-			const user = await User.findOne({ email }).lean();
+			let lowerEmail = email.toLowerCase();
+			const user = await User.findOne({ email: lowerEmail }).lean();
 			if (!user){
 				return res.status(400).json({ type: 'warning', message: 'Не удалось войти, попробуйте изменить данные' });
 			}
@@ -89,7 +91,7 @@ router.post(
 				res.cookie('isAdmin', true);
 			}
 			res.cookie('token', token, {maxAge:(remember?mounth:day)*1000/*, httpOnly: true, secure: true */}); //<-- TODO secure cookie
-			console.log(`Пользователь ${email}, успешно авторизирован`);
+			console.log(`Пользователь ${lowerEmail}, успешно авторизирован`);
 			res.json({ type: 'success', message: 'Пользователь успешно авторизирован' });
 		} catch (err) {
 			console.log('err:', err);

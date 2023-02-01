@@ -41,13 +41,15 @@ export default function RegistrationForm(){
 	const [referral, setReferral] = useState(null);
 	let onFinish = async values => {
 		setLoading(true);
-		delete values.agreement;
+		// delete values.agreement;
 		try {
 			let res = await getJson('/api/auth/register', values, message);
 			if(res.status==200){
-				setTimeout(()=>router.push('/login'),1500);
+				message.success('Вы успешно заригистрированы!',3);
+				router.push('/login');
 			}else{
-				throw new Error(res.message||'Неизвестная ошибка');
+				message.error('Ошибка при регистрации');
+				// throw new Error(res.result.message||'Неизвестная ошибка');
 			}
 		} catch (err) {
 			console.error('Ошибка при регистрации пользователя:', err);
@@ -240,7 +242,7 @@ export default function RegistrationForm(){
 			
 			<Form.Item extra="Согласно нашей политике, регистрация только с помощью рефералов, если вы перешли по реферальной ссылке не меняйте даннное значение">
 				<Form.Item
-					label={referrer?"Реферальный код уже успешно введен!":"Реферальный код"}
+					label={referrer?'Реферальный код уже успешно введен!':'Реферальный код'}
 					name="referralLink"
 					rules={[
 						{ required: true, message: 'Пожалуйста укажите реферала!' },

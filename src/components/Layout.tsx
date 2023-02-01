@@ -10,10 +10,11 @@ export interface MainLayout {
 }
 export default function MainLayout({children}: MainLayout):React.ReactNode{
 	const [collapsed, setCollapse] = useState(false);
-	const isMobile = false;
+	const [isMobile, setMobile] = useState(false);
 	const router = useRouter();
 	useEffect(() => {
 		setCollapse(window.innerWidth <= 760);
+		setMobile(window.innerWidth <= 760);
 		// window.addEventListener('reize', () => {});
 		// return () => {
 		//   window.removeEventListener('resize', () => {})
@@ -21,7 +22,8 @@ export default function MainLayout({children}: MainLayout):React.ReactNode{
 	}, []);
 	const onCollapse = ():any=>{setCollapse(!collapsed);};
 	return (<Layout style={{ minHeight: '100vh' }}>
-		<Sider collapsible={isMobile?false:true} collapsed={isMobile?true:collapsed} onCollapse={onCollapse}>
+		{/* collapsible={!isMobile} */}
+		<Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
 			<div className="logo" />
 			<Menu theme="dark" selectedKeys={[(router?.route)||'/']} mode="inline">
 				<div className="logoblock" style={{
@@ -55,7 +57,7 @@ export default function MainLayout({children}: MainLayout):React.ReactNode{
 		<Layout className="site-layout">
 			<Header className="site-layout-background" style={{ padding: 0 }}>
 				<div style={{ float: 'right' }}>
-					<Auth isMobile={collapsed}/>
+					<Auth isMobile/>
 				</div>
 			</Header>
 			<Content style={{ margin: '0 16px' }}>
@@ -63,7 +65,7 @@ export default function MainLayout({children}: MainLayout):React.ReactNode{
 					<Breadcrumb.Item>User</Breadcrumb.Item>
 					<Breadcrumb.Item>Bill</Breadcrumb.Item>
 				</Breadcrumb> */}
-				<div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
+				<div className="site-layout-background" style={{ padding: '24 0', minHeight: 360, overflowX: 'auto' }}>
 					{children}
 				</div>
 			</Content>

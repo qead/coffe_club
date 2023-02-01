@@ -3,6 +3,7 @@ import {message, Button, Form, Input, Checkbox} from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import getJson from '../../utils/getJson';
+import Link from 'next/link';
 
 export default function Login({closeModal}){
 	const [loading, setLoading] = useState(false);
@@ -66,7 +67,7 @@ export default function Login({closeModal}){
 			<Button type="primary" loading={loading} htmlType="submit" className="row-item-m5">
         Войти
 			</Button>
-      Или <a href="">Зарегистрироваться!</a>
+      Или <Link href="/register">Зарегистрироваться!</Link>
 		</Form.Item>
 	</Form>);
 }

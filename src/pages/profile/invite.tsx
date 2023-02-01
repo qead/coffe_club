@@ -37,7 +37,7 @@ export default function Profile(ctx) {
 						value={`${window.location.origin}/register?referrer=${state._id}`}
 					/>
 					<Tooltip title="Скопировать реф. ссылку">
-						<Button icon={<CopyOutlined />} onClick={()=>copyText(`/register?referrer=${state._id}`, message)}>Скопировать</Button>
+						<Button icon={<CopyOutlined />} onClick={()=>copyText(`${window.location.origin}/register?referrer=${state._id}`, message)}>Скопировать</Button>
 					</Tooltip>
 				</div>
 			</MainLayout>);
