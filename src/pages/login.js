@@ -4,6 +4,7 @@ import {message, Button, Form, Input, Checkbox} from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 import getJson from '../utils/getJson';
 
@@ -33,6 +34,7 @@ export default function Login(){
 				name="normal_login"
 				initialValues={{'remember': true}}
 				onFinish={onFinish}
+				style={{maxWidth:'500px', margin:'25px 0'}}
 			>
 				<Form.Item
 					name="email"
@@ -56,7 +58,7 @@ export default function Login(){
 					rules={[{'required': true,
 						'message': 'Пожалуйста введите пароль!'}]}
 				>
-					<Input
+					<Input.Password
 						prefix={<LockOutlined />}
 						type="password"
 						placeholder="Пароль"
@@ -74,7 +76,7 @@ export default function Login(){
 					<Button type="primary" loading={loading} htmlType="submit" className="row-item-m5">
         Войти
 					</Button>
-      Или <a href="">Зарегистрироваться!</a>
+      Или <Link href="/register">Зарегистрироваться!</Link>
 				</Form.Item>
 			</Form>
 		</MainLayout>);

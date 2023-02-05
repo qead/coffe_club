@@ -39,14 +39,16 @@ export default function RegistrationForm(){
 	const {referrer} = router.query;
 	const [loading, setLoading] = useState(false);
 	const [referral, setReferral] = useState(null);
+	const [form] = Form.useForm();
 	let onFinish = async values => {
 		setLoading(true);
 		// delete values.agreement;
 		try {
 			let res = await getJson('/api/auth/register', values, message);
 			if(res.status==200){
-				message.success('Вы успешно заригистрированы!',3);
-				router.push('/login');
+				form.resetFields();
+				message.info('Перейдите на вашу почту, для получения данных входа',7);
+				setTimeout(()=>router.push('/login'),4000);
 			}else{
 				message.error('Ошибка при регистрации');
 				// throw new Error(res.result.message||'Неизвестная ошибка');
@@ -63,6 +65,7 @@ export default function RegistrationForm(){
 	return <MainLayout>
 		<h1>Страница регистрации</h1>
 		<Form
+			form={form}
 			name="register"
 			layout="vertical"
 			onFinish={onFinish}

@@ -57,7 +57,7 @@ export default function MainLayout({children}: MainLayout):React.ReactNode{
 		<Layout className="site-layout">
 			<Header className="site-layout-background" style={{ padding: 0 }}>
 				<div style={{ float: 'right' }}>
-					<Auth isMobile/>
+					<Auth isMobile={isMobile}/>
 				</div>
 			</Header>
 			<Content style={{ margin: '0 16px' }}>

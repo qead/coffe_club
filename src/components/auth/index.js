@@ -61,7 +61,14 @@ export default function Auth({isMobile}){
 	let onClick = type => {
 		switch (type) {
 		case 'login':
-			setShowModal({ content: <Login closeModal={closeModal} />, modalProps: { title: 'Авторизация' }});
+			setShowModal({ content: <Login closeModal={closeModal} />, modalProps: {
+				title: 'Авторизация',
+				footer: [
+					<Button key={0} onClick={closeModal}>Отмена</Button>
+				],
+				onCancel: closeModal,
+				bodyStyle: { paddingBottom: 0 } }
+			});
 			break;
 		case 'register':
 			router.push('/register');
@@ -76,15 +83,7 @@ export default function Auth({isMobile}){
 		}
 	};
 	return <>
-    		{showModal && ModalProp({
-			...showModal,
-			modalProps: {
-				footer: [
-					<Button key={0} onClick={closeModal}>Отмена</Button>
-				],
-				onCancel: closeModal,
-				bodyStyle: { paddingBottom: 0 }
-			}})
+    		{showModal && ModalProp(showModal)
 		}
 		<Space direction="horizontal" wrap style={{padding:'0 5px'}}>
 			<Button

@@ -49,7 +49,7 @@ export default function Login({closeModal}){
 			rules={[{'required': true,
 				'message': 'Пожалуйста введите пароль!'}]}
 		>
-			<Input
+			<Input.Password
 				prefix={<LockOutlined />}
 				type="password"
 				placeholder="Пароль"
@@ -60,7 +60,7 @@ export default function Login({closeModal}){
 				<Checkbox>Запомнить меня</Checkbox>
 			</Form.Item>
 			<a href="">
-        Забыли пароль
+        		Забыли пароль
 			</a>
 		</Form.Item>
 		<Form.Item>
