@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import MainLayout from '../components/Layout';
-import {message, Button, Form, Input, Checkbox} from 'antd';
+import {message, Button, Form, Input, Checkbox, InputNumber} from 'antd';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-
 import getJson from '../utils/getJson';
-
 export default function Login(){
 	
 	const router = useRouter();
@@ -37,21 +35,24 @@ export default function Login(){
 				style={{maxWidth:'500px', margin:'25px 0'}}
 			>
 				<Form.Item
-					name="email"
+					name="id"
 					rules={[
-						{
-							'type': 'email',
-							'message': 'Введите ваш E-mail корректно!'
-						},
-						{
-							'required': true,
-							'message': 'Пожалуйста введите E-mail!'
-						}
+						// {
+						// 	'type': 'email',
+						// 	'message': 'Введите ваш E-mail корректно!'
+						// },
+						// {
+						// 	'required': true,
+						// 	'message': 'Пожалуйста введите E-mail!'
+						// },
 					]}
+					extra="Номер пользователя (id) отправлен на вашу почту после регистрации"
 				>
-					<Input
+					<InputNumber
+						style={{width:'100%'}}
+						controls={false}
 						prefix={<UserOutlined />}
-						placeholder="E-mail" />
+						placeholder="Id пользователя" />
 				</Form.Item>
 				<Form.Item
 					name="password"

@@ -7,6 +7,7 @@ const schema = new Schema({
 	country:{type: String, required:true},
 	city:{type: String},
 	email:{type: String, required:true, unique:true},
+	id:{type:Number, required:true,  unique:true},
 	password:{type: String, required:true},
 	birthDate:{type: String, required:true},
 	referralLink:{type:Types.ObjectId}

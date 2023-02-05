@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { Button, Space, message } from 'antd';
 import { useState,useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import Login from './Login';
+// import Login from './Login';
 // import Register from './Register';
 import ModalProp from '../../utils/ModalProp';
 import { LoginOutlined, UserAddOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
@@ -33,7 +33,7 @@ export default function Auth({isMobile}){
 		console.log('Auth component is render!');
 		checkAuth();
 	  }, []);
-	let closeModal = ()=> setShowModal(false);
+	// let closeModal  = ()=> setShowModal(false);
 	let checkAuth = async() => {
 		try {
 			let res = await fetch('/api/auth/isAuth');
@@ -61,14 +61,15 @@ export default function Auth({isMobile}){
 	let onClick = type => {
 		switch (type) {
 		case 'login':
-			setShowModal({ content: <Login closeModal={closeModal} />, modalProps: {
-				title: 'Авторизация',
-				footer: [
-					<Button key={0} onClick={closeModal}>Отмена</Button>
-				],
-				onCancel: closeModal,
-				bodyStyle: { paddingBottom: 0 } }
-			});
+			router.push('/login');
+			// setShowModal({ content: <Login closeModal={closeModal} />, modalProps: {
+			// 	title: 'Авторизация',
+			// 	footer: [
+			// 		<Button key={0} onClick={closeModal}>Отмена</Button>
+			// 	],
+			// 	onCancel: closeModal,
+			// 	bodyStyle: { paddingBottom: 0 } }
+			// });
 			break;
 		case 'register':
 			router.push('/register');

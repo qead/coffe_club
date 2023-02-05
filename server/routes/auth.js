@@ -6,7 +6,9 @@ const router = Router();
 const day = 86400; //seconds in 1 day
 const mounth = 2592000; //seconds in 1 mounth
 const User = require('../models/User');
+const Counters = require('../models/Counters');
 const jwtValidator = require('../utils/jwtValidator');
+// const getNextSequenceValue = require('../utils/getNextSequenceValue');
 import transporter from '../utils/nodemailer';
 // api/auth
 router.post(
@@ -38,12 +40,13 @@ router.post(
 			}
 			let password = '123456';
 			let hashedPass = await bcrypt.hash(password, 5);
-			let user = await new User({ email: lowerEmail, name, surname, birthDate, password: hashedPass, referralLink, country, city, tel });
+			let {next} = await Counters.increment('user_id');
+			let user = await new User({ id: next, email: lowerEmail, name, surname, birthDate, password: hashedPass, referralLink, country, city, tel });
 			await transporter.sendMail({
 				from: '"Клуб любителей кофе! clubofcoffe.shop" <coffe_club@bk.ru>',
 				to: lowerEmail,
 				subject: 'Поздравляем с регистрацией!',
-				html: 'Благодарим за участие в нашем проекте! Данные для входа на наш <a href="https://clubofcoffe.shop" target="_blank">сайт</a>: <br> <ul><li>Логин (email): '+lowerEmail+'</li><li>Пароль: '+password+'</li>'
+				html: 'Благодарим за участие в нашем проекте! Данные для входа на наш <a href="https://clubofcoffe.shop" target="_blank">сайт</a>: <br> <ul><li>Логин (id): '+next+'</li><li>Пароль: '+password+'</li>'
 			});
 			await user.save();
 			res.json({ type: 'success', message: 'Пользователь успешно зарегистирован' });
@@ -58,7 +61,7 @@ router.post(
 router.post(
 	'/login',
 	[
-		check('email', 'Некорректный email').normalizeEmail().isEmail(),
+		// check('email', 'Некорректный email').normalizeEmail().isEmail(),
 		check('password', 'Минимальная длина пароля 6 символов').isLength({ min: 6 })
 	],
 	async (req, res) => {
@@ -71,9 +74,9 @@ router.post(
 					message: 'Некорректные данные при входе в систему'
 				});
 			}
-			const { email, password, remember } = req.body;
-			let lowerEmail = email.toLowerCase();
-			const user = await User.findOne({ email: lowerEmail }).lean();
+			const { id, password, remember } = req.body;
+			// let lowerEmail = email.toLowerCase();
+			const user = await User.findOne({ id }).lean();
 			if (!user){
 				return res.status(400).json({ type: 'warning', message: 'Не удалось войти, попробуйте изменить данные' });
 			}
@@ -91,7 +94,7 @@ router.post(
 				res.cookie('isAdmin', true);
 			}
 			res.cookie('token', token, {maxAge:(remember?mounth:day)*1000/*, httpOnly: true, secure: true */}); //<-- TODO secure cookie
-			console.log(`Пользователь ${lowerEmail}, успешно авторизирован`);
+			console.log(`Пользователь ${id}, успешно авторизирован`);
 			res.json({ type: 'success', message: 'Пользователь успешно авторизирован' });
 		} catch (err) {
 			console.log('err:', err);
