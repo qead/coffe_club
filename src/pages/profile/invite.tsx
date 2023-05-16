@@ -1,4 +1,4 @@
-import { useSelector } from 'react-redux';
+import { useAuthSelector } from '../../selectors';
 import { useState, useEffect } from 'react';
 import {
 	Tree,
@@ -19,7 +19,7 @@ import GetRefs from '../../components/profile/GetRefs';
 
 
 export default function Profile(ctx) {
-	const isAuth = useSelector((state) => state.isAuth);
+	const {isAuth} = useAuthSelector();
 	const [state, setState] = useState ([]); 
 	useEffect ( async() => {
 		const userInfo = await getJson('/api/profile/getUser');

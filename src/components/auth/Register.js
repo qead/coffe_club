@@ -48,7 +48,6 @@ export default function RegistrationForm({closeModal}){
 		setReferralInfo(null);
 		try {
 			let {result} = await getJson('/api/user/getReferral', {id: referral});
-			console.log('res', result);
 			if(!result?.name || !result?.surname){
 				throw new Error('Отсутсвуют обязательные поля реферала');
 			}

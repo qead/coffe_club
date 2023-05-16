@@ -82,7 +82,7 @@ export default function Login(){
 			</Form>
 		</MainLayout>);
 }
-export const getServerSideProps = async function ({ req, res }){
+export const getServerSideProps = async function ({ req }){
 	// Get the user's session based on the request
 	const isAuth = !!req?.cookies?.token;
 	if (isAuth) {

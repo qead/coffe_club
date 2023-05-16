@@ -1,9 +1,9 @@
 /* eslint-disable */
 const withLess = require('@zeit/next-less');
 const withSass = require('@zeit/next-sass');
-const lessToJS = require('less-vars-to-js');
-const fs = require('fs');
-const path = require('path');
+// const lessToJS = require('less-vars-to-js');
+// const fs = require('fs');
+// const path = require('path');
 
 // Where your antd-custom.less file lives
 // const themeVariables = lessToJS(
@@ -42,6 +42,9 @@ module.exports = withSass({
         config.module.rules.unshift({
           test: antStyles,
           use: 'null-loader'
+        },{
+          test: /\.css$/,
+          use: 'css-loader'
         });
       }
       return config;

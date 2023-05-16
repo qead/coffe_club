@@ -19,19 +19,17 @@ export  function getServerSideProps ({ req, res }){
 	};
 }
 export default function AdminPanel(ctx:any){
-	const [state, setState] = useState ([]); 
+	const [userCount, setUserCount] = useState (0); 
 	useEffect (async() => { 
-		const response =await getJson('/api/admin/getUsers',{test:'test'});
+		const response =await getJson('/api/admin/getUsersCount');
 		if(response?.result){
-			setState(response.result);
+			setUserCount(response.result);
 		}
 	}, [] );
 	if(ctx?.isAuth&&ctx?.isAdmin){
 		return (<AdminLayout>
 			<h1>Статистика</h1>
-			<ul>
-				{state.map((item, i)=><li key={i}>{item.email}</li>)}
-			</ul>
+			Количество пользователей: {userCount}
 		</AdminLayout>);
 	}
 	return (<MainLayout>

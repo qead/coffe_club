@@ -1,72 +1,194 @@
-import { useSelector } from 'react-redux';
+import { useAuthSelector } from '../../selectors';
 import { useState, useEffect } from 'react';
 import {
-	Tree,
+	Form,
 	Input,
 	Row,
 	Col,
 	Tooltip,
 	DatePicker,
 	Button,
-	message
+	message,
+	Select
 } from 'antd';
 import { CopyOutlined } from '@ant-design/icons';
 import MainLayout from '../../components/Layout';
+import PhoneInput from '../../components/PhoneInput';
 import getJson from '../../utils/getJson';
+import countries from '../../lib/countries.json';
 import copyText from '../../utils/copyText';
 import moment from 'moment';
 import GetRefs from '../../components/profile/GetRefs';
 
-
+const tailFormItemLayout = {
+	wrapperCol: {
+		xs: {
+			span: 24,
+			offset: 0
+		},
+		sm: {
+			span: 24,
+			offset: 8
+		}
+	}
+};
+moment.locale('ru');
+const dateFromObjectId = function (objectId) {
+	return moment(parseInt(objectId.substring(0, 8), 16) * 1000).format('lll');
+};
 export default function Profile(ctx) {
-	const isAuth = useSelector((state) => state.isAuth);
-	const [state, setState] = useState ([]); 
+	const [form] = Form.useForm();
+	const {isAuth} = useAuthSelector();
+	const [state, setState] = useState ({}); 
+	const [disabled, setDisabled] = useState (true); 
+	const [loading, setLoading] = useState (false); 
 	useEffect ( async() => {
+		setLoading(true);
 		const userInfo = await getJson('/api/profile/getUser');
+		console.log('userInfo', userInfo);
 		if(userInfo?.result){
 		 	setState(userInfo.result);
 		}
+		setLoading(false);
 	}, [] );
+	useEffect(() => form.resetFields(), [state]);
+	const changeFormData = data =>{
+		console.log('data', data);
+	};
 	if(isAuth){
 		return (
 			<MainLayout>
 				<h1>Профиль</h1>
-				<div className="site-input-group-wrapper" style={{maxWidth:'500px'}}>
-					<Input.Group>
-						<p>Ваша страна</p>
-						<Input value={state.country}/>
-					</Input.Group>
-					<br/>
-					<Input.Group>
-						<p>Ваш город</p>
-						<Input value={state.city}/>
-					</Input.Group>
-					<br/>
-					<Input.Group>
-						<p>Ваше Имя</p>
-						<Input value={state.name}/>
-					</Input.Group>
-					<br/>
-					<Input.Group>
-						<p>Ваша Фамилия</p>
-						<Input value={state.surname} />
-					</Input.Group>
-					<br/>
-					<Input.Group>
-						<p>Ваша Дата рождения</p>
-						<span>{moment(state.birthDate).format('YYYY/MM/DD')}</span>
-					</Input.Group>
-					<br/>
-					<Input.Group>
-						<p>Ваш E-mail</p>
-						<Input value={state.email} />
-					</Input.Group>
-					<br/>
-					<Input.Group>
-						<p>Ваш номер телефона</p>
-						<Input value={state.tel}/>
-					</Input.Group>
-				</div>
+				<Button type='primary' onClick={()=>setDisabled(false)}>Хочу изменить свои данные</Button>
+				<Form
+					disabled={disabled}
+					form={form}
+					name="register"
+					layout="vertical"
+					onFinish={changeFormData}
+					scrollToFirstError
+					loading={loading.toString()}
+					initialValues={state.name&&{
+						'id': state.id,
+						'register': dateFromObjectId(state._id),
+						'name': state.name,
+						'surname': state.surname,
+						'tel':state.tel,
+						'country': state.country,
+						'city': state.city,
+						'birthDate': moment(state.birthDate),
+						'email': state.email
+					}}
+					style={{maxWidth:'500px', margin:'25px 0'}}
+				>
+					<Form.Item
+						name="id"
+						label="Ваш уникальный айди"
+					>
+						<Input disabled placeholder="0" />
+					</Form.Item>
+					<Form.Item
+						name="register"
+						label="Дата регистрации"
+					>
+						<Input disabled placeholder="0" />
+					</Form.Item>
+					<Form.Item
+						label="Дата вашего рождения"
+						name="birthDate"
+						rules={[
+							{
+								required: true,
+								message: 'Введите вашу дату рождения!'
+							}
+						]}
+					>
+						<DatePicker disabled placeholder='дд.мм.гггг' format='DD.MM.YYYY' style={{width:'100%'}}/>
+					</Form.Item>
+					<Form.Item
+						label="Ваша электронная почта"
+						name="email"
+						rules={[
+							{
+								type: 'email',
+								message: 'Введите корректный E-mail!'
+							},
+							{
+								required: true,
+								message: 'Введите ваш E-mail!'
+							},
+							{
+								validator: (_, value) =>!value.includes(' ')? Promise.resolve(): Promise.reject(new Error('Уберите пустые пробелы из поля для ввода'))
+							}
+						]}
+					>
+						<Input disabled placeholder="E-mail" />
+					</Form.Item>
+					<Form.Item
+						name="name"
+						label="Ваше имя"
+						rules={[
+							{
+								required: true,
+								message: 'Введите ваше имя!'
+							},
+							{
+								validator: (_, value) =>!value.includes(' ')? Promise.resolve(): Promise.reject(new Error('Уберите пустые пробелы из поля для ввода'))
+							}
+						]}
+					>
+						<Input placeholder="Иван" />
+					</Form.Item>
+					<Form.Item
+						name="surname"
+						label="Ваша фамилия"
+						rules={[
+							{
+								required: true,
+								message: 'Введите вашу фамилию!'
+							},
+							{
+								validator: (_, value) =>!value.includes(' ')? Promise.resolve(): Promise.reject(new Error('Уберите пустые пробелы из поля для ввода'))
+							}
+						]}
+					>
+						<Input placeholder="Ваша Фамилия" />
+					</Form.Item>
+					<PhoneInput />
+					<Form.Item
+						label="Выберите вашу страну"
+						name="country"
+						rules={[
+							{
+								required: true,
+								message: 'Введите вашу страну'
+							}
+						]}
+					>
+						<Select
+							showSearch
+							style={{width:'100%'}}
+							options={countries}
+						/>
+						{/* <Input style={{width:'100%'}} placeholder="Росси"/> */}
+					</Form.Item>
+					<Form.Item
+						name="city"
+						rules={[
+							{
+								required: true,
+								message: 'Введите ваш город'
+							}
+						]}
+					>
+						<Input style={{width:'100%'}}  placeholder="Ваш город"/>
+					</Form.Item>
+					<Form.Item {...tailFormItemLayout}>
+						<Button type="primary" htmlType="submit">
+							Обновить данные
+						</Button>
+					</Form.Item>
+				</Form>
 			</MainLayout>);
 	}
 	return (<MainLayout>

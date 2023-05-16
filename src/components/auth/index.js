@@ -1,7 +1,8 @@
 import { useRouter } from 'next/router';
 import { Button, Space, message } from 'antd';
 import { useState,useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useAuthSelector } from '../../selectors';
+import { useDispatch } from 'react-redux';
 // import Login from './Login';
 // import Register from './Register';
 import ModalProp from '../../utils/ModalProp';
@@ -11,7 +12,7 @@ import { initializeStore } from '../../store';
 const reduxStore = initializeStore();
 const { dispatch } = reduxStore;
 const useAuth = () => {
-	const isAuth = useSelector((state) => state.isAuth);
+	const {isAuth} = useAuthSelector();
 	const dispatch = useDispatch();
 	const LOGIN = () =>
 	  dispatch({
@@ -32,7 +33,7 @@ export default function Auth({isMobile}){
 	useEffect(() => {
 		console.log('Auth component is render!');
 		checkAuth();
-	  }, []);
+	}, []);
 	// let closeModal  = ()=> setShowModal(false);
 	let checkAuth = async() => {
 		try {
@@ -84,8 +85,7 @@ export default function Auth({isMobile}){
 		}
 	};
 	return <>
-    		{showModal && ModalProp(showModal)
-		}
+    		{showModal && ModalProp(showModal)}
 		<Space direction="horizontal" wrap style={{padding:'0 5px'}}>
 			<Button
 				loading={loading}

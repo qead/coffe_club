@@ -6,7 +6,7 @@ const { Meta } = Card;
 
 const Service: React.FC = ({data,actions}) => (
 	<Card
-		style={{ width: 300 }}
+		style={{maxWidth: 300 }}
 		cover={
 			<img
 				alt="example"

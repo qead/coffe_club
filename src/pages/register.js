@@ -19,6 +19,7 @@ import {
 	Select
 } from 'antd';
 import countries from '../lib/countries.json';
+// import locale from 'antd/es/date-picker/locale/ru_RU';
 // import CountryPhoneInput, { ConfigProvider } from 'antd-country-phone-input';
 // import en from 'world_countries_lists/data/countries/en/world.json';
 
@@ -40,11 +41,11 @@ export default function RegistrationForm(){
 	const [loading, setLoading] = useState(false);
 	const [referral, setReferral] = useState(null);
 	const [form] = Form.useForm();
-	let onFinish = async values => {
+	const onFinish = async values => {
 		setLoading(true);
 		// delete values.agreement;
 		try {
-			let res = await getJson('/api/auth/register', values, message);
+			const res = await getJson('/api/auth/register', values, message);
 			if(res.status==200){
 				form.resetFields();
 				message.info('Перейдите на вашу почту, для получения данных входа',7);
@@ -59,10 +60,10 @@ export default function RegistrationForm(){
 		}
 		setLoading(false);
 	};
-	let changeRef = (e) =>{
+	const changeRef = (e) =>{
 		setReferral(e.target.value);
 	};
-	return <MainLayout>
+ 	return <MainLayout>
 		<h1>Страница регистрации</h1>
 		<Form
 			form={form}
@@ -171,7 +172,10 @@ export default function RegistrationForm(){
 					}
 				]}
 			>
-				<DatePicker placeholder='дд.мм.гггг' format='DD.MM.YYYY' style={{width:'100%'}}/>
+				<DatePicker
+					showToday={false}
+					showTime={true}
+					placeholder='дд.мм.гггг' format='DD.MM.YYYY' style={{width:'100%'}}/>
 			</Form.Item>
 			<Form.Item
 				label="Ваша электронная почта"
@@ -243,7 +247,7 @@ export default function RegistrationForm(){
 					</Row>
 				</Form.Item> */}
 			
-			<Form.Item extra="Согласно нашей политике, регистрация только с помощью рефералов, если вы перешли по реферальной ссылке не меняйте даннное значение">
+			<Form.Item style={{visibility:'hidden'}} extra="Согласно нашей политике, регистрация только с помощью рефералов, если вы перешли по реферальной ссылке не меняйте даннное значение">
 				<Form.Item
 					label={referrer?'Реферальный код уже успешно введен!':'Реферальный код'}
 					name="referralLink"
