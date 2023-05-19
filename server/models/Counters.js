@@ -1,4 +1,5 @@
-const {Schema, model, Types} = require('mongoose');
+const mongoose = require('mongoose');
+const { Schema, model, Types } = mongoose;
 
 const schema = new Schema({	
 	_id: String,
@@ -7,4 +8,4 @@ const schema = new Schema({
 schema.statics.increment = function (counter, callback) {
 	return this.findByIdAndUpdate({_id:counter}, { $inc: { next: 1 } }, {new: true, upsert: true, select: {next: 1}}, callback);
 };
-module.exports=model('Counters', schema);
+module.exports=mongoose.models.Counters || model('Counters', schema);

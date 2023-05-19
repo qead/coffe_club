@@ -5,6 +5,7 @@ const auth = require('./auth');
 const profile = require('./profile');
 const admin = require('./admin');
 const user = require('./user');
+const shop = require('./shop');
 
 module.exports = function(app) {
 	app.use('/', logger);
@@ -12,4 +13,5 @@ module.exports = function(app) {
 	app.use('/api/profile', jwtValidator, profile);
 	app.use('/api/admin', isAdmin, admin);
 	app.use('/api/user', user);
+	app.use('/api/products/', shop);
 };
