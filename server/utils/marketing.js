@@ -118,8 +118,8 @@ export const processReferralPayments = async () => {
 				return referers;
 			}
 			console.log('referer id', referer.id);
-			if(!referer.monthly_spend || referer.monthly_spend.amount<activityPrice){
-				console.log('!referer.monthly_spend || referer.monthly_spend.amount<activityPrice', referer.monthly_spend,referer.monthly_spend.amount,activityPrice);
+			if(!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice){
+				console.log('!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice', referer.monthly_spend,referer.monthly_spend.amount,activityPrice);
 				await getReferralUsers(referer._id, maxDepth, activityPrice, currentDepth, referers);
 			}else{
 				console.log('push referer', referer);
