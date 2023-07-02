@@ -173,9 +173,11 @@ export const processReferralPayments = async () => {
 				console.log('сукаа compressedRefs', compressedRefs);
 				for (let i = 0; i < compressedRefs.length; i++) {
 					const refererUser = await User.findById(compressedRefs[i]._id);
-					const earned = totalMarketingPrice * (masterAccount[i].percent / 100);			
-					refererUser.cashAccount += earned;	
-					console.log('начисляем бабки', refererUser.id,earned);
+					const earned = totalMarketingPrice * (masterAccount[i].percent / 100);
+					refererUser.cashAccount += earned*(80/100);	
+					refererUser.cashTransfiguration += earned*(10/100);	
+					refererUser.cashBusinessTools += earned*(10/100);
+					console.log('начисляем бабки но 20% идет на афшоры', refererUser.id, earned);
 					await refererUser.save();
 					const refCashErnedT = new Transaction({
 						order: order._id,

@@ -12,6 +12,8 @@ const schema = new Schema({
 	password:{type: String, required:true},
 	birthDate:{type: String, required:true},
 	referralLink:{type:Types.ObjectId, require:true},
+	cashTransfiguration:{type:Number, default: 0},
+	cashBusinessTools:{type:Number, default: 0},
 	cashAccount:{type:Number, default: 0},
 	monthly_spend:{
 		amount: {type:Number, default: 0},
