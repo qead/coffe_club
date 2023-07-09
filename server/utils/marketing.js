@@ -11,20 +11,21 @@ export const updateMonthlySpend = async function(userId, amount, marketing_amoun
 		throw new Error('User not found');
 	}
 	const currentDate = moment().toDate();
-	if (!user.monthly_spend) {
+	if (!user.monthly_spend || !user.monthly_spend.activityDate) {
 		// Если пользователь еще не совершал покупок, создаем для него объект monthly_spend с текущей датой
 		user.monthly_spend = {
 			amount: amount,
 			marketing_amount: marketing_amount,
-			date: currentDate
+			activityDate: currentDate
 		};
 		console.log('!user.monthly_spend', user.monthly_spend);
 	} else {
-		console.log('else');
+		console.log('else 1 user.monthly_spend.activityDate', user.monthly_spend.activityDate);
 		const currentMonth = moment().month();
 		const currentYear = moment().year();
-		const month = moment(user.monthly_spend.date).month();
-		const year = moment(user.monthly_spend.date).year();
+		const month = moment(user.monthly_spend.activityDate).month();
+		const year = moment(user.monthly_spend.activityDate).year();
+		console.log('month', month,year,'user.monthly_spend',user.monthly_spend);
 		if (month !== currentMonth || year !== currentYear) {
 			console.log('month/year !== currentMonth/currentYear', month, currentMonth, year, currentYear);
 			// Текущий месяц отличается от месяца в monthly_spend, сохраняем текущие значения в отдельную таблицу
@@ -32,17 +33,17 @@ export const updateMonthlySpend = async function(userId, amount, marketing_amoun
 				userId: userId,
 				amount: user.monthly_spend.amount,
 				marketing_amount: user.monthly_spend.marketing_amount,
-				date: currentDate
+				activityDate: user.monthly_spend.activityDate
 			});
 			await monthlySpend.save();
 			// Обнуляем monthly_spend
 			user.monthly_spend = {
 				amount: amount,
 				marketing_amount: marketing_amount,
-				date: currentDate
+				activityDate: currentDate
 			};
 		} else { 
-			console.log('else 2', month, currentMonth, year, currentYear);
+			console.log('else 2  у чела совпадает month&year увеличиваем значения');
 			// Текущий месяц и год совпадают с месяцем/годом в monthly_spend, обновляем значения
 			user.monthly_spend.amount += amount;
 			user.monthly_spend.marketing_amount += marketing_amount;
@@ -77,13 +78,13 @@ export const dayJob = schedule.scheduleJob('0 0 * * *', async function() {
 				userId: user._id,
 				amount: user.monthly_spend.amount,
 				marketing_amount: user.monthly_spend.marketing_amount,
-				date: currentDate
+				activityDate: user.monthly_spend.activityDate
 			});
 			await monthlySpend.save();
 			user.monthly_spend = {
 				amount: 0,
 				marketing_amount: 0,
-				date: currentDate
+				activityDate: currentDate
 			};
 			await user.save();
 		}
@@ -93,12 +94,14 @@ export const dayJob = schedule.scheduleJob('0 0 * * *', async function() {
 export const processReferralPayments = async () => {
 	try{
 		const start = new Date().getTime();
+		const currentMonth = moment().month();
+		const currentYear = moment().year();
 		// await createBackup(User);
 		console.log('!!!start processReferralPayments!!!', start);
 		const orders = await Order.find({ isProcessed: false }).lean(); // получаем все необработанные заказы
 		console.log('orders length', orders.length);
 		let completedSteps=0;
-		const getReferralUsers = async function (userId, maxDepth = 0, activityPrice = 0, currentDepth = 0, referers = []) {
+		const getReferralUsers = async function (order_date, userId, maxDepth = 0, activityPrice = 0, currentDepth = 0, referers = []) {
 			if (currentDepth >= maxDepth) {
 				return referers;
 			}
@@ -117,14 +120,38 @@ export const processReferralPayments = async () => {
 			if (!referer) {
 				return referers;
 			}
-			console.log('referer id', referer.id);
-			if(!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice){
-				console.log('!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice', referer.monthly_spend,referer.monthly_spend.amount,activityPrice);
-				await getReferralUsers(referer._id, maxDepth, activityPrice, currentDepth, referers);
-			}else{
-				console.log('push referer', referer);
-				referers.push(referer);
-				await getReferralUsers(referer._id, maxDepth, activityPrice, currentDepth + 1, referers);
+			if(!referer.monthly_spend||!referer.monthly_spend.activityDate){
+				await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers);
+			}
+			const activityDate = referer.monthly_spend.activityDate;
+			if (moment(activityDate).month() === moment(order_date).month() && moment(activityDate).year() === moment(order_date).year()) {
+				// Проверяем активность для текущего месяца и года покупки
+				if (!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice) {
+					console.log(' < activityPrice или нет полей monthly_spend', referer.monthly_spend, activityPrice);
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers);
+				} else {
+					console.log('push referer from cur month', referer);
+					referers.push(referer);
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers);
+				}
+			} else {
+				// Проверяем активность для другого месяца покупки
+				const monthlySpend = await MonthlySpend.findOne({
+					userId: referer._id,
+					activityDate: {
+						$gte: moment(order_date).startOf('month').toDate(),
+						$lt: moment(order_date).endOf('month').toDate()
+					}
+				});
+				console.log('Проверяем активность для другого месяца покупки monthlySpend:', monthlySpend);
+				if (!monthlySpend || !monthlySpend.amount || monthlySpend.amount < activityPrice) {
+					console.log('!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice', referer.monthly_spend, referer.monthly_spend.amount, activityPrice);
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers);
+				} else {
+					console.log('push referer from another month/year', referer);
+					referers.push(referer);
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers);
+				}
 			}
 			return referers;
 		};
@@ -133,14 +160,13 @@ export const processReferralPayments = async () => {
 			const marketing_depth = masterAccount.length;
 			const totalMarketingPrice = order.marketing.totalMarketingPrice;
 			const user = await User.findById(order.customer); // получаем пользователя, сделавшего заказ
-			console.log('order totalPrice:', order.price, 'costumer:', user.id);
+			console.log('~PROC ORDER~ totalPrice:', order.price, 'costumer:', user.id);
 			let referers=[];
 			const {referralLink} = user;
 			if (user._id === referralLink) {
 				console.error('Ошибка: пользователь ссылается на самого себя _id:',user._id,'заказ',order._id);
 				continue; // переходим к следующему заказу
 			}
-			const referer = await User.findById(referralLink);
 			const giftErned = order.price * (giftAccount / 100);
 			user.giftAccount += giftErned;
 			await user.save();
@@ -152,11 +178,18 @@ export const processReferralPayments = async () => {
 			});
 			await giftErnedT.save();
 			// Сохраняем транзакцию
+			const referer = await User.findById(referralLink);
+			const orderCreatedAt = order.createdAt;
+			const orderMonth = moment(orderCreatedAt).month();
+			const orderYear = moment(orderCreatedAt).year();
 			if(referer){
-				console.log('Есть реферал');
 				// начисление на подарочный счет рефереру
-				if(referer.monthly_spend && referer.monthly_spend.amount >= activityPrice){
-					console.log('Больше чем ценна активности',referer.monthly_spend.amount,activityPrice);
+				if(
+					referer.monthly_spend &&  referer.monthly_spend.activityDate &&
+					referer.monthly_spend.activityDate.getMonth() === orderMonth &&
+					referer.monthly_spend.activityDate.getFullYear() === orderYear &&
+					referer.monthly_spend.amount >= activityPrice){
+					console.log('Больше чем ценна активности', referer.monthly_spend.amount,activityPrice);
 					referer.giftAccount += giftErned;
 					await referer.save();
 					const refGiftErnedT = new Transaction({
@@ -167,10 +200,31 @@ export const processReferralPayments = async () => {
 					});
 					await refGiftErnedT.save();
 				}else{
-					console.warn('referer id:',referer.id,'не начисленно на подарочный счет ввиду недостаточной активности');
+					// Ищем сведения о активности в месяце заказа
+					const other_monthly_spend = await MonthlySpend.findOne({
+						userId: referer._id,
+						activityDate: {
+							$gte: moment(orderCreatedAt).startOf('month').toDate(),
+							$lt: moment(orderCreatedAt).endOf('month').toDate()
+						}
+					});
+					if(other_monthly_spend&&other_monthly_spend.amount >= activityPrice){
+						console.log('Больше чем ценна активности НО В ДРУГОМ МЕСЯЦЕ Т.К заказ другого', other_monthly_spend.amount,activityPrice);
+						referer.giftAccount += giftErned;
+						await referer.save();
+						const refGiftErnedT = new Transaction({
+							sender: user._id,
+							recipient: referer._id,
+							type: 'giftErned',
+							amount: giftErned
+						});
+						await refGiftErnedT.save();
+					}else{
+						console.warn('referer id:',referer.id,'не начисленно на подарочный счет ввиду недостаточной активности');
+					}
 				}
-				let compressedRefs = await getReferralUsers(user._id, marketing_depth, activityPrice);
-				console.log('сукаа compressedRefs', compressedRefs);
+				let compressedRefs = await getReferralUsers(orderCreatedAt, user._id, marketing_depth, activityPrice);
+				console.log('compressedRefs', compressedRefs);
 				for (let i = 0; i < compressedRefs.length; i++) {
 					const refererUser = await User.findById(compressedRefs[i]._id);
 					const earned = totalMarketingPrice * (masterAccount[i].percent / 100);
@@ -207,7 +261,7 @@ export const processReferralPayments = async () => {
 		const end = new Date().getTime();
 		console.log(`~~~end processReferralPayments: ${end - start}ms~~~~`);
 	}catch(err){
-		console.error('~~~~~~~~~~~~~~~~processReferralPayments~~~~~~~~~~~~~~~~~~~~~~~~~', err);
+		console.error('~~~~~~~~~~~~~~~~processReferralPayments ERROR~~~~~~~~~~~~~~~~~~~~~~~~~', err);
 	}
 };
 process.on('SIGINT', function () {

@@ -14,7 +14,7 @@ const monthlySpendSchema = new mongoose.Schema({
 		type: Number,
 		required: true
 	},
-	date: {
+	activityDate: {
 		type: Date,
 		required: true
 	}

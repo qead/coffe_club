@@ -18,7 +18,7 @@ const schema = new Schema({
 	monthly_spend:{
 		amount: {type:Number, default: 0},
 		marketing_amount: {type:Number, default: 0},
-		date: {type:Date}
+		activityDate: {type:Date}
 	},
 	giftAccount:{type:Number, default: 0},
 	lk_subscription: {type: Date}
