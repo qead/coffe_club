@@ -98,7 +98,7 @@ export const processReferralPayments = async () => {
 		const currentYear = moment().year();
 		// await createBackup(User);
 		console.log('!!!start processReferralPayments!!!', start);
-		const orders = await Order.find({ isProcessed: false }).lean(); // получаем все необработанные заказы
+		const orders = await Order.find({ isProcessed: false }); // получаем все необработанные заказы
 		console.log('orders length', orders.length);
 		let completedSteps=0;
 		const getReferralUsers = async function (order_date, userId, maxDepth = 0, activityPrice = 0, currentDepth = 0, referers = []) {
@@ -116,7 +116,7 @@ export const processReferralPayments = async () => {
 				console.log('!referralLink', referralLink);
 				return referers;
 			}
-			const referer = await User.findById(referralLink).lean();
+			const referer = await User.findById(referralLink);
 			if (!referer) {
 				return referers;
 			}
@@ -126,7 +126,7 @@ export const processReferralPayments = async () => {
 			const activityDate = referer.monthly_spend.activityDate;
 			if (moment(activityDate).month() === moment(order_date).month() && moment(activityDate).year() === moment(order_date).year()) {
 				// Проверяем активность для текущего месяца и года покупки
-				if (!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice) {
+				if (!referer.monthly_spend || !referer.monthly_spend.amount || !referer.monthly_spend.activityDate || referer.monthly_spend.amount < activityPrice) {
 					console.log(' < activityPrice или нет полей monthly_spend', referer.monthly_spend, activityPrice);
 					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers);
 				} else {
@@ -139,10 +139,11 @@ export const processReferralPayments = async () => {
 				const monthlySpend = await MonthlySpend.findOne({
 					userId: referer._id,
 					activityDate: {
+						$exists: true, // Проверяем наличие поля activityDate
 						$gte: moment(order_date).startOf('month').toDate(),
 						$lt: moment(order_date).endOf('month').toDate()
 					}
-				});
+				}); 
 				console.log('Проверяем активность для другого месяца покупки monthlySpend:', monthlySpend);
 				if (!monthlySpend || !monthlySpend.amount || monthlySpend.amount < activityPrice) {
 					console.log('!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice', referer.monthly_spend, referer.monthly_spend.amount, activityPrice);
@@ -157,7 +158,7 @@ export const processReferralPayments = async () => {
 		};
 		for (const order of orders) {
 			const {masterAccount, giftAccount, activityPrice} = order.marketing;
-			const marketing_depth = masterAccount.length;
+			const marketing_depth = masterAccount.length || 0;
 			const totalMarketingPrice = order.marketing.totalMarketingPrice;
 			const user = await User.findById(order.customer); // получаем пользователя, сделавшего заказ
 			console.log('~PROC ORDER~ totalPrice:', order.price, 'costumer:', user.id);
@@ -224,24 +225,27 @@ export const processReferralPayments = async () => {
 					}
 				}
 				let compressedRefs = await getReferralUsers(orderCreatedAt, user._id, marketing_depth, activityPrice);
-				console.log('compressedRefs', compressedRefs);
-				for (let i = 0; i < compressedRefs.length; i++) {
+				const lengthToProcess = Math.min(compressedRefs.length, masterAccount.length);
+				console.log('compressedRefs LENGTH', compressedRefs.length,'lengthToProcess',lengthToProcess);
+				for (let i = 0; i < lengthToProcess; i++) {  
 					const refererUser = await User.findById(compressedRefs[i]._id);
-					const earned = totalMarketingPrice * (masterAccount[i].percent / 100);
-					refererUser.cashAccount += earned*(80/100);	
-					refererUser.cashTransfiguration += earned*(10/100);	
-					refererUser.cashBusinessTools += earned*(10/100);
-					console.log('начисляем бабки но 20% идет на афшоры', refererUser.id, earned);
-					await refererUser.save();
-					const refCashErnedT = new Transaction({
-						order: order._id,
-						sender: user._id,
-						recipient: refererUser._id,
-						type: 'cashErned',
-						amount: earned
-					});
-					await refCashErnedT.save();		
-					referers.push({earned, _id:refererUser._id, id:refererUser.id});
+					if (refererUser) {
+						const earned = totalMarketingPrice * (masterAccount[i].percent / 100);
+						refererUser.cashAccount += earned*(80/100);	
+						refererUser.cashTransfiguration += earned*(10/100);	
+						refererUser.cashBusinessTools += earned*(10/100);
+						console.log('начисляем бабки но 20% идет на афшоры', refererUser.id, earned);
+						await refererUser.save();
+						const refCashErnedT = new Transaction({
+							order: order._id,
+							sender: user._id,
+							recipient: refererUser._id,
+							type: 'cashErned',
+							amount: earned
+						});
+						await refCashErnedT.save();		
+						referers.push({earned, _id:refererUser._id, id:refererUser.id});
+					}
 				}
 			}else{
 				console.warn('Отсутсвует реферал у пользователя id',user.id);
