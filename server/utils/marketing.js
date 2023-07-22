@@ -101,60 +101,62 @@ export const processReferralPayments = async () => {
 		const orders = await Order.find({ isProcessed: false }); // получаем все необработанные заказы
 		console.log('orders length', orders.length);
 		let completedSteps=0;
-		const getReferralUsers = async function (order_date, userId, maxDepth = 0, activityPrice = 0, currentDepth = 0, referers = []) {
-			if (currentDepth >= maxDepth) {
-				return referers;
+		const getReferralUsers = async function (
+			order_date,
+			userId,
+			maxDepth = 0,
+			activityPrice = 0,
+			currentDepth = 0,
+			referers = new Set(),
+			processed = new Set()
+		) {
+			if (currentDepth >= maxDepth || processed.has(userId)) {
+				return Array.from(referers);
 			}
+			processed.add(userId); // Mark the user as processed to avoid circular references
 			const user = await User.findById(userId);
-			console.log('getReferralUsers DEPTH', user.id, currentDepth, maxDepth);
 			if (!user) {
-				console.log('getReferralUsers ~~~~User not found~~~');
+				console.log('User not found');
 				throw new Error('User not found');
 			}
-			const {referralLink} = user;
+			const { referralLink } = user;
 			if (!referralLink) {
-				console.log('!referralLink', referralLink);
-				return referers;
+				return Array.from(referers);
 			}
 			const referer = await User.findById(referralLink);
 			if (!referer) {
-				return referers;
+				return Array.from(referers);
 			}
-			if(!referer.monthly_spend||!referer.monthly_spend.activityDate){
-				await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers);
+			if(!referer.monthly_spend ||!referer.monthly_spend.activityDate){
+				await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers, processed);
 			}
-			const activityDate = referer.monthly_spend.activityDate;
-			if (moment(activityDate).month() === moment(order_date).month() && moment(activityDate).year() === moment(order_date).year()) {
-				// Проверяем активность для текущего месяца и года покупки
-				if (!referer.monthly_spend || !referer.monthly_spend.amount || !referer.monthly_spend.activityDate || referer.monthly_spend.amount < activityPrice) {
-					console.log(' < activityPrice или нет полей monthly_spend', referer.monthly_spend, activityPrice);
-					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers);
+			// Check if the referer's activityDate is within the same month and year as the order_date
+			const refererActivityDate = referer.monthly_spend.activityDate;
+			if (moment(refererActivityDate).isSame(order_date, 'month') && moment(refererActivityDate).isSame(order_date, 'year')) {
+			// Check if the referer's monthly_spend is valid for the given activityPrice
+				if (!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice) {
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers, processed);
 				} else {
-					console.log('push referer from cur month', referer);
-					referers.push(referer);
-					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers);
+					referers.add(referer); // Add the valid referer to the set
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers, processed);
 				}
 			} else {
-				// Проверяем активность для другого месяца покупки
+			// Check the activity in a different month for the referer
 				const monthlySpend = await MonthlySpend.findOne({
 					userId: referer._id,
 					activityDate: {
-						$exists: true, // Проверяем наличие поля activityDate
 						$gte: moment(order_date).startOf('month').toDate(),
 						$lt: moment(order_date).endOf('month').toDate()
 					}
-				}); 
-				console.log('Проверяем активность для другого месяца покупки monthlySpend:', monthlySpend);
+				});
 				if (!monthlySpend || !monthlySpend.amount || monthlySpend.amount < activityPrice) {
-					console.log('!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice', referer.monthly_spend, referer.monthly_spend.amount, activityPrice);
-					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers);
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers, processed);
 				} else {
-					console.log('push referer from another month/year', referer);
-					referers.push(referer);
-					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers);
+					referers.add(referer); // Add the valid referer to the set
+					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers, processed);
 				}
 			}
-			return referers;
+			return Array.from(referers);
 		};
 		for (const order of orders) {
 			const {masterAccount, giftAccount, activityPrice} = order.marketing;
