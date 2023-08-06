@@ -90,6 +90,11 @@ export default function MainLayout({children, title, breadcrumbs,balance}: MainL
 				color:'#fff'
 			}}>CoffeClub</div>
 			<Menu theme="dark" selectedKeys={[(router?.route)||'/']} mode="inline" items={items}/>
+			{/* {items.map((item,i) => (
+				<Menu.Item key={item.key} icon={item.icon}>
+					{item.label}
+				</Menu.Item>
+			))} */}
 			{/* <Menu.Item key="/" icon={<HomeOutlined />}>
 					<Link href="/"><a>Главная</a></Link>
 				</Menu.Item>
@@ -140,7 +145,7 @@ export default function MainLayout({children, title, breadcrumbs,balance}: MainL
 					</Breadcrumb>
 					}
 					{title&&<h1>{title}</h1>}
-					{balance?<Statistic title="Денег на аккаунте" value={balanceAmount||0} formatter={value=><>{value} <SyncOutlined onClick={getBalance}/></>}/>:null}
+					{balance?<Statistic title="Денег на аккаунте" value={(balanceAmount||0)+' ₱'} formatter={value=><>{value} <SyncOutlined onClick={getBalance}/></>}/>:null}
 				</div>
 				<div className="site-layout-background" style={{ padding: '24px 0', minHeight: 360 }}>
 					{children}

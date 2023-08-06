@@ -20,11 +20,13 @@ import GetRefs from '../../components/profile/GetRefs';
 
 export default function Profile(ctx) {
 	const {isAuth} = useAuthSelector();
-	const [state, setState] = useState ([]); 
+	const [id, setId] = useState (''); 
 	useEffect ( async() => {
-		const userInfo = await getJson('/api/profile/getUser');
-		if(userInfo?.result){
-		 	setState(userInfo.result);
+		const res = await getJson('/api/profile/getUser');
+		if(res?.result?.id){
+			setId(res.result.id);
+		}else{
+			message.warning('Не удалось получить id пользователя');
 		}
 	}, [] );
 	if(isAuth){
@@ -34,10 +36,10 @@ export default function Profile(ctx) {
 				<div style={{maxWidth:'500px'}}>
 					<Input
 						// style={{ width: 'calc(100% - 32px)' }}
-						value={`${window.location.origin}/register?referrer=${state._id}`}
+						value={`${window.location.origin}/register?referrer=${id}`}
 					/>
 					<Tooltip title="Скопировать реф. ссылку">
-						<Button icon={<CopyOutlined />} onClick={()=>copyText(`${window.location.origin}/register?referrer=${state._id}`, message)}>Скопировать</Button>
+						<Button icon={<CopyOutlined />} onClick={()=>copyText(`${window.location.origin}/register?referrer=${id}`, message)}>Скопировать</Button>
 					</Tooltip>
 				</div>
 			</MainLayout>);

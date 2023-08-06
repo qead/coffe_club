@@ -76,7 +76,8 @@ router.post('/getTransactions', async(req,res)=>{
 				{ type: 'transfer', recipient: userId },
 				{ type: 'transfer', sender: userId },
 				{ type: 'subscription', sender: userId },
-				{ type: 'purchase', sender: userId }
+				{ type: 'purchase', sender: userId },
+				{ type: 'gift_purchase', sender: userId }
 			]
 		};
 		filters = Object.assign(filters, {$or: [cashGiftFilter, transferPurchaseFilter] });
@@ -183,18 +184,18 @@ router.use('/userAccountPayment', async(req,res)=>{
 		res.status(500).end('Что-то пошло не так');
 	}
 });
-router.use('/createOrder', async(req,res)=>{
+router.post('/createOrder', async(req,res)=>{
 	try {
 		if(!req.jwt.userId){
 			return res.status(400).json({ type: 'error', message: 'Не удалось определить пользователя' });
 		}
 		let customer = mongoose.Types.ObjectId(req.jwt.userId);
 		const {masterAccount,giftAccount,activityPrice, subscriptionPrice} = await SiteConfig.findOne({},{id:0,__v:0}).sort({_id:-1});
-		const user = await User.findById(customer,{cashAccount:1,lk_subscription:1}); 
+		const user = await User.findById(customer,{cashAccount:1,giftAccount:1,lk_subscription:1}); 
 		if(!user.lk_subscription || user.lk_subscription < new Date()){
 			return res.status(403).json({ price:subscriptionPrice, message: 'Вы не оплатили личный кабинет для осуществления покупок'});
 		}
-		let {items} = req.body;
+		let {items, isGift} = req.body;
 		// let delivery_address = {};
 		// if(!address.map || !address.length){
 		// 	return res.status(400).json({ type: 'error', message: 'Отсутсвует адресс доставки, заполните адрес доставки и повторите попытку' });
@@ -219,40 +220,79 @@ router.use('/createOrder', async(req,res)=>{
 			}
 		}
 		// Проверяем, достаточно ли у пользователя средств для покупки товара
-		if (!user.cashAccount||user.cashAccount < totalPrice) {
+		if (totalPrice  ==  0) {
 			// Возвращаем ошибку, если у пользователя недостаточно средств
-			return res.status(400).json({ type: 'error', message: 'Недостаточно средств' });
-		} else {
-			// Списываем сумму товара со счета пользователя
-			user.cashAccount -= totalPrice;
-			// Создаем объект транзакции и сохраняем его в базе данных
-			await user.save();
-			if(!masterAccount || !masterAccount.length){
-				res.status(400).json({ type: 'error', message: 'Отсутсвует данные для начисления процентов' });
+			return res.status(400).json({ type: 'error', message: 'Пустой заказ' });
+		}
+		// Check  is Gift payment order
+		if(isGift){
+			console.log('user.giftAccount', user.giftAccount,user.id);
+			if (!user.giftAccount||user.giftAccount < totalPrice) {
+				// Возвращаем ошибку, если у пользователя недостаточно средств
+				return res.status(400).json({ type: 'error', message: 'Недостаточно средств на подарочном счете' });
+			}else{
+				user.giftAccount -= totalPrice;
+				await user.save();
+				let order = new Order({
+					products: items,
+					price:totalPrice,
+					customer,
+					isProcessed:true,
+					isGift,
+					marketing:{
+						totalMarketingPrice,
+						masterAccount,
+						giftAccount,
+						activityPrice
+					}
+				});
+				await order.save();
+				const transaction = new Transaction({
+					order: order._id,
+					sender: customer,
+					amount: totalPrice,
+					type: 'gift_purchase',
+					date: new Date()
+				});
+				await transaction.save();
 			}
-			await updateMonthlySpend(customer, totalPrice, totalMarketingPrice);
-			console.log('customer', customer);
-			let order = new Order({
-				products: items,
-				price:totalPrice,
-				customer,
-				marketing:{
-					totalMarketingPrice,
-					masterAccount,
-					giftAccount,
-					activityPrice
+		}else{
+			// Проверяем, достаточно ли у пользователя средств для покупки товара
+			if (!user.cashAccount||user.cashAccount < totalPrice) {
+			// Возвращаем ошибку, если у пользователя недостаточно средств
+				return res.status(400).json({ type: 'error', message: 'Недостаточно средств' });
+			} else {
+			// Списываем сумму товара со счета пользователя
+				user.cashAccount -= totalPrice;
+				// Создаем объект транзакции и сохраняем его в базе данных
+				await user.save();
+				if(!masterAccount || !masterAccount.length){
+					res.status(400).json({ type: 'error', message: 'Отсутсвует данные для начисления процентов' });
 				}
-			});
-			await order.save();
-			const transaction = new Transaction({
-				order: order._id,
-				sender: customer,
-				amount: totalPrice,
-				type: 'purchase',
-				date: new Date()
-			});
-			await transaction.save();
+				await updateMonthlySpend(customer, totalPrice, totalMarketingPrice);
+				console.log('customer', customer);
+				let order = new Order({
+					products: items,
+					price:totalPrice,
+					customer,
+					marketing:{
+						totalMarketingPrice,
+						masterAccount,
+						giftAccount,
+						activityPrice
+					}
+				});
+				await order.save();
+				const transaction = new Transaction({
+					order: order._id,
+					sender: customer,
+					amount: totalPrice,
+					type: 'purchase',
+					date: new Date()
+				});
+				await transaction.save();
 			// Обновляем баланс и список транзакций пользователя
+			}
 		}
 		res.end('Ваш заказ успешно сформирован!');
 	} catch (error) {
@@ -275,6 +315,20 @@ router.use('/getUser', async(req,res)=>{
 		res.status(500).end('Что-то пошло не так');
 	}
 });	
+router.use('/updateUser', async(req,res)=>{
+	try {
+		let id = jwt.verify(req.cookies.token,process.env.jwtSecret).userId;
+		if(!id){			
+			return res.status(400).json({ type: 'error', message: 'Не удалось определить пользователя' });
+		}
+		const {name, surname, tel,country,city} =req.body;
+		await User.updateOne({_id:id},{name, surname, tel,country,city});
+		res.end('Данные успешно обновлены');
+	} catch (error) {
+		console.log('error', error);
+		res.status(500).end('Что-то пошло не так');
+	}
+});	
 router.use('/getBalance', async(req,res)=>{
 	try {
 		let id = jwt.verify(req.cookies.token,process.env.jwtSecret).userId;
@@ -282,7 +336,13 @@ router.use('/getBalance', async(req,res)=>{
 			return res.status(400).json({ type: 'error', message: 'Не удалось определить пользователя' });
 		}
 		let user = await User.findById(id,{__v:0, password:0,id:0,email:0,name:0,surname:0,birthDate:0,referralLink:0,country:0,tel:0,role:0}).lean();
-		res.json({cash:user.cashAccount||0,gift:user.giftAccount||0});
+		
+		res.json({
+			cash:user.cashAccount||0,
+			gift:user.giftAccount||0,
+			transfiguration:user.cashTransfiguration||0,
+			businessTools:user.cashBusinessTools||0
+		});
 		// res.end();
 	} catch (error) {
 		console.log('error', error);

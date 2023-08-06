@@ -17,6 +17,39 @@ router.use('/getUnProcessedOrders', async(req,res)=>{
 		res.status(500).end('Что-то пошло не так');
 	}
 });
+
+router.post('/getOrders', async (req, res) => {
+	try {
+		const { page = 1 } = req.body;
+		const perPage = 10;
+		const skip = (page - 1) * perPage;
+		// Получаем последние заказы с помощью skip и limit
+		const orders = await Order.find({})
+			.sort({ createdAt: -1 }) // Сортируем по убыванию даты создания (последние заказы первыми)
+			.skip(skip)
+			.limit(perPage)
+			.lean(); // Используем метод lean() для получения простых объектов JSON, а не Mongoose документов
+		const count = await Order.countDocuments().lean();
+		res.json({orders,count});
+	} catch (error) {
+		console.error('Error fetching orders:', error);
+		res.status(500).end('Что-то пошло не так');
+	}
+});
+router.post('/getOrderMark', async (req, res) => {
+	try {
+		const { id } = req.body;
+		if(!id){
+			res.status(400).end('Отсутствует id');
+		}
+		// Получаем последние заказы с помощью skip и limit
+		const marketing = await Order.findOne({_id:id},{processed:1});
+		res.json(marketing);
+	} catch (error) {
+		console.error('Error fetching orders:', error);
+		res.status(500).end('Что-то пошло не так');
+	}
+});
 router.use('/processReferralPayments', async(req,res)=>{
 	try {
 		let result = await processReferralPayments();
@@ -28,15 +61,15 @@ router.use('/processReferralPayments', async(req,res)=>{
 	}
 });
 
-router.use('/getMarketing', async(req,res)=>{
-	try {
-		let doc = await SiteConfig.findOne({}, {_id:0,__v: 0}).sort({_id:-1});
-		res.json(doc);
-	} catch (error) {
-		console.log('error', error);
-		res.status(500).end('Что-то пошло не так');
-	}
-});
+// router.use('/getMarketing', async(req,res)=>{
+// 	try {
+// 		let doc = await SiteConfig.findOne({}, {_id:0,__v: 0}).sort({_id:-1});
+// 		res.json(doc);
+// 	} catch (error) {
+// 		console.log('error', error);
+// 		res.status(500).end('Что-то пошло не так');
+// 	}
+// });
 
 router.use('/editMarketing', async(req,res)=>{
 	try {
@@ -67,6 +100,23 @@ router.use('/editProduct', check('url','Некоректный url').isLength({ 
 		let insertDoc = req.body;
 		delete insertDoc.url;
 		await Product.updateOne({url}, insertDoc);
+		res.end();
+	} catch (error) {
+		console.log('error', error);
+		res.status(500).end('Что-то пошло не так');
+	}
+});
+
+router.post('/updateOrderStatus', async(req,res)=>{
+	try {
+		let { id, status } = req.body;
+		// Validate the 'status' against the possibleStatuses array to ensure it's a valid status
+		const possibleStatuses = ['Заказ создан', 'Передан', 'Отменен'];
+		if (!possibleStatuses.includes(status)) {
+			return res.status(400).end('Неизвестный статус');
+		}
+		// Update the order status using the provided ID
+		await Order.updateOne({ _id: id }, { status });
 		res.end();
 	} catch (error) {
 		console.log('error', error);

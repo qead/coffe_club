@@ -27,7 +27,7 @@ export default function AdminPanel(ctx:any){
 		cashForm.setFieldsValue(value);
 	};
 	useEffect (async() => { 
-		const marketing =await getJson('/api/admin/getMarketing');
+		const marketing =await getJson('/api/products/getMarketing');
 		if(marketing.status !==  200 ){
 			return message.warning('Не удалось получить данные маркетинга');
 		}

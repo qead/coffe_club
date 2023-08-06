@@ -16,21 +16,21 @@ interface DataType {
 	email: string;
 	id: number;
 	address: string;
-	monthly_spend?: {marketing_amount:number,amount:number};
+	monthly_spend?: {marketing_amount:number,amount:number,date:Date};
 	group_marketing_amount: number;
 	group_amount: number;
 	description: string;
 	children?: DataType[];
 }
 const tableColumns:ColumnsType<DataType> = [
-	// {
-	// 	title: '№',
-	// 	width:50,
-	// 	fixed:'left',
-	// 	dataIndex: 'referralNumber'
-	// },
 	{
-		title: 'Глубина',
+		title: '№',
+		width:50,
+		fixed:'left',
+		dataIndex: 'referralNumber'
+	},
+	{
+		title: 'Уровень',
 		// width:200,
 		columnWidth:'auto',
 		fixed:'left',
@@ -38,25 +38,19 @@ const tableColumns:ColumnsType<DataType> = [
 		key:'depth'
 	},
 	{
-		title: 'Имя',
-		dataIndex: 'name'
-	},
-	{
-		title: 'Фамилия',
-		dataIndex: 'surname'
-	},
-	{
-		title: 'Телефон',
-		dataIndex: 'tel'
-	},
-	{
-		title: 'Почта',
-		dataIndex: 'email'
+		title: 'ФИО',
+		key:'fio',
+		render:({name},{surname})=>`${name} ${surname}`||'Неизвестно'
 	},
 	{
 		title: 'ID',
 		dataIndex: 'id',
 		width:50
+	},
+	{
+		title: 'Контакты',
+		key:'contacts',
+		render:({tel},{email})=>`${tel} ${email}`||'Неизвестно'
 	},
 	{
 		title: 'Покупок в текущем месяце',

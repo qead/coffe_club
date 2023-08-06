@@ -7,7 +7,7 @@ import loadProducts from '../../lib/loadProducts';
 import getJson from '../../utils/getJson';
 // import { useProductSelector } from '../../selectors';
 import { fetchProducts } from '../../actions';
-import { GetStaticPaths, GetStaticProps } from 'next';
+import {  GetStaticProps,GetStaticPaths   } from 'next';
 // import ProductModel from '../../../server/utils/dbConnect';
 // import ProductModel from '../../../server/models/Product';
 const Product = ({product}) => {
@@ -47,6 +47,7 @@ const Product = ({product}) => {
 		</MainLayout>
 	);
 };
+
 export const getStaticPaths: GetStaticPaths = async () => {
 	const result = await loadProducts();
 	// const paths = mapEntriesSlugToPaths(products);
@@ -62,14 +63,26 @@ export const getStaticPaths: GetStaticPaths = async () => {
 		fallback: false
 	};
 };
-
-export const getServerSideProps: GetStaticProps = async ({params:{url}}: any) => {
+// export const getStaticPaths: GetStaticPaths = async () => {
+// 	// Получите список товаров или URL-адресов товаров из вашего источника данных
+// 	const products = await loadProducts();
+// 	// Создайте массив путей, используя URL-адреса товаров
+// 	const paths = products.map((product) => ({
+// 		params: { url: product.url }
+// 	}));
+// 	return {
+// 		paths,
+// 		fallback: 'true'
+// 	};
+// };
+export const getStaticProps:GetStaticProps = async ({ params }) => {
+	// Получите идентификатор товара из параметров
+	const url = params?.url;
+	// Выполните запрос к вашему источнику данных, чтобы получить данные о товаре
 	if(!url){
 		throw new Error('Ошибка при получении url GetStaticProps');
 	}
 	const [result] = await loadProducts({url});
-	// console.log('GetStaticProps result', result);
-	// const {result} = await getJson(process.env.host+'/api/products/getProduct',{url});
 	return {
 		props: {
 			product: {
@@ -81,6 +94,7 @@ export const getServerSideProps: GetStaticProps = async ({params:{url}}: any) =>
 				weight: result?.weight || 0,
 				marketing_price: result?.marketing_price || 'null'
 			}
+		// revalidate: 5 // Установите время повторной генерации в секундах
 		}
 	};
 };

@@ -4,7 +4,7 @@ const { Schema, model, Types } = mongoose;
 const transactionSchema = new mongoose.Schema({
 	type: {
 		type: String,
-		enum: ['transfer', 'cashErned', 'purchase', 'giftErned','subscription'],
+		enum: ['transfer', 'cashErned', 'purchase','gift_purchase', 'giftErned','subscription'],
 		required: true
 	},
 	sender: {

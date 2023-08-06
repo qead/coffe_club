@@ -30,6 +30,8 @@ const getTagTransaction = type =>{
 		return <Tag color="green" icon={<GiftOutlined />}>Подарочный счет</Tag>;
 	}else if(type=='purchase'){
 		return <Tag color="blue" icon={<ShoppingOutlined />}>Покупка</Tag>;
+	}else if(type=='gift_purchase'){
+		return <Tag color="yellow" icon={<ShoppingOutlined />}>Покупка с подарочного</Tag>;
 	}else if(type=='subscription'){
 		return <Tag color="geekblue" icon={<StarOutlined />}>Оплата лк</Tag>;
 	}else {
@@ -84,6 +86,7 @@ export default function Profile(ctx) {
 	const filterOptions = [
 		{label:'Все транзакции', value:''},
 		{label:'Покупки', value:'purchase'},
+		{label:'Покупки с подарочного', value:'gift_purchase'},
 		{label:'Переводы', value:'transfer'},
 		{label:'Рефералы', value:'cashErned'},
 		{label:'Оплата лк', value:'subscription'},
@@ -93,6 +96,9 @@ export default function Profile(ctx) {
 		const {type} = transaction;
 		switch (type) {
 		case 'purchase':
+			getOrderData(transaction.order);
+			break;
+		case 'gift_purchase':
 			getOrderData(transaction.order);
 			break;
 		default:
@@ -145,25 +151,25 @@ export default function Profile(ctx) {
 			// setCount(count);
 		}
 	};
-	const getSubscriptionData = async(order)=>{
-		if(!order){
-			return message.error('Нет данных по данному заказу');
-		}
-		const res = await getJson('/api/profile/getOrders',{order});
-		if(res.status!=200){
-			message.error('Ошибка при получении данных по заказу');
-		}else{
-			if(!res.result.length){
-				message.error('Данные по покупке не найденны');
-			}else{
-				const [data] = res.result;
-				setCurrentOrder(data);
-			}
-			// const {transactions, count} = res.result;
-			// setData(transactions);
-			// setCount(count);
-		}
-	};
+	// const getSubscriptionData = async(order)=>{
+	// 	if(!order){
+	// 		return message.error('Нет данных по данному заказу');
+	// 	}
+	// 	const res = await getJson('/api/profile/getOrders',{order});
+	// 	if(res.status!=200){
+	// 		message.error('Ошибка при получении данных по заказу');
+	// 	}else{
+	// 		if(!res.result.length){
+	// 			message.error('Данные по покупке не найденны');
+	// 		}else{
+	// 			const [data] = res.result;
+	// 			setCurrentOrder(data);
+	// 		}
+	// 		// const {transactions, count} = res.result;
+	// 		// setData(transactions);
+	// 		// setCount(count);
+	// 	}
+	// };
 	const getData = async ()=>{
 		const skip = PAGE_SIZE*page-PAGE_SIZE;
 		const res = await getJson('/api/profile/getTransactions',{skip,transactionType:transaction,dateRange:range});

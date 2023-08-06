@@ -1,5 +1,5 @@
 import React from 'react';
-import { Row, Col, Typography, Descriptions, Button, Tag } from 'antd';
+import { Row, Col, Typography, Descriptions, Button, Tag, Tabs } from 'antd';
 import cartNotification from './CartNotification';
 import { Product, addToCart } from '../../actions';
 import { useDispatch } from 'react-redux';
@@ -33,7 +33,6 @@ const SingleProduct: React.FC<SingleProductProps> = ({ product }) => {
 		dispatch(addToCart(url, price));
 		cartNotification();
 	};
-
 	return (
 		<>
 			<Row className="product-wrapper" justify="space-around">
@@ -53,21 +52,39 @@ const SingleProduct: React.FC<SingleProductProps> = ({ product }) => {
 					sm={breakpoints[1].sm}
 					className="product-description"
 				>
-					<Tag color="#108ee9">Вес: {weight} грамм</Tag>
+					
 					<Descriptions title={title} column={1}>
+						<Item key="desc" label={Array.isArray(description)?'':'Описание'}>
+							{Array.isArray(description)?
+								<Tabs
+									style={{maxWidth:'50vw'}}
+									defaultActiveKey='1'
+									items={description.map(({title,desc},i) => {
+										return {
+											label: title,
+											key: String(i),
+											children: desc
+										};
+									})}
+								/>:
+								<>
+									<br/>
+									<p dangerouslySetInnerHTML={{ __html: description }} />
+								</>
+							}
+						</Item>
 						<Item key="price" label="Цена" className="price-description">
 							<Text
-								type="secondary"
 								delete={on_sale}
 								className={`${on_sale ? 'on_sale' : 'regular'}`}
 							>
-								{price}
+								{price} ₽
 							</Text>
 							{on_sale && <Text style={{ marginLeft: 15 }}>{sale_price}</Text>}
 						</Item>
 						<Item key="marketing_price" label="Баллы">{marketing_price}</Item>
-						<Item key="desc" label="Описание">
-							<p dangerouslySetInnerHTML={{ __html: description }} />
+						<Item key="button" label="Вес">
+							<Text>{weight} грамм</Text>
 						</Item>
 						<Item key="button" label="">
 							<Button type="primary" onClick={addItemToCart}>

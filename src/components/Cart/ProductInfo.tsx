@@ -43,9 +43,9 @@ const ProductInfo: React.FC<ProductInfoProps> = ({ product }) => {
 								delete={on_sale}
 								className={`${on_sale ? 'on_sale' : 'regular'}`}
 							>
-                ${price}
+								₱{price}
 							</Text>
-							{on_sale && <Text style={{ marginLeft: 10 }}>${sale_price}</Text>}
+							{on_sale && <Text style={{ marginLeft: 10 }}>₱{sale_price}</Text>}
 						</div>
 					</a>
 				</Link>

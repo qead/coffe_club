@@ -18,7 +18,7 @@ router.post(
 		// check('password', 'Минимальная длина пароля 6 символов').isLength({ min: 6 })
 	],
 	async (req, res) => {
-		console.group('Процесс регистрации');
+		console.group('Процесс регистрации, ref id',req.body.id);
 		try {
 			let errors = validationResult(req);
 			if (!errors.isEmpty()) {
@@ -27,27 +27,29 @@ router.post(
 					message: 'Некорректные данные при регистрации'
 				});
 			}
-			const { email, name, surname, birthDate, referralLink, country, city, tel } = req.body;
+			const { email, name, surname, birthDate, id, country, city, tel } = req.body;
 			let lowerEmail = email.toLowerCase();
 			const candidate = await User.findOne({ email:lowerEmail });
 			if (candidate) {
 				return res.status(400).json({ type: 'warning', message: 'Такой пользователь уже существует' });
 			}
-			const referral = await User.findOne({_id:referralLink});
+			const referral = await User.findOne({id:Number(id)});
 			if (!referral) {
-				console.log('Попытка регистрация с несущетсвующимм рефералом', referralLink);
+				console.log('Попытка регистрация с несущетсвующимм рефералом', id);
 				return res.status(400).json({ type: 'warning', message: 'Укажите корректный id реферала'});
 			}
 			let password = '123456';
 			let hashedPass = await bcrypt.hash(password, 5);
 			let {next} = await Counters.increment('user_id');
-			let user = await new User({ id: next, email: lowerEmail, name, surname, birthDate, password: hashedPass, referralLink, country, city, tel });
-			await transporter.sendMail({
-				from: '"Клуб любителей кофе! clubofcoffe.shop" <coffe_club@bk.ru>',
-				to: lowerEmail,
-				subject: 'Поздравляем с регистрацией!',
-				html: 'Благодарим за участие в нашем проекте! Данные для входа на наш <a href="https://clubofcoffe.shop" target="_blank">сайт</a>: <br> <ul><li>Логин (id): '+next+'</li><li>Пароль: '+password+'</li>'
-			});
+			let user = await new User({ id: next, email: lowerEmail, name, surname, birthDate, password: hashedPass, referralLink:referral._id, country, city, tel });
+			if(process.env.NODE_ENV == 'production'){
+				await transporter.sendMail({
+					from: '"Клуб любителей кофе! clubofcoffe.shop" <coffe_club@bk.ru>',
+					to: lowerEmail,
+					subject: 'Поздравляем с регистрацией!',
+					html: 'Благодарим за участие в нашем проекте! Данные для входа на наш <a href="https://clubofcoffe.shop" target="_blank">сайт</a>: <br> <ul><li>Логин (id): '+next+'</li><li>Пароль: '+password+'</li>'
+				});
+			}
 			await user.save();
 			res.json({ type: 'success', message: 'Пользователь успешно зарегистирован' });
 		} catch (err) {

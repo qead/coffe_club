@@ -21,7 +21,7 @@ import getJson from '../../utils/getJson';
 // 	{url:'test-coffe-three', id:2, photos:'https://via.placeholder.com/400x150', title:'Кофе 3', description:'Зерновой кофе  3', price:1500}
 // ];
 
-function ProductsPage({products=[]}: InferGetStaticPropsType<typeof GetServerSideProps>) {
+function ProductsPage({products=[],giftAccount=0}: InferGetStaticPropsType<typeof GetServerSideProps>) {
 	const [company, setCompany] = useState<string>('');
 	const [sortCondition, setSortCondition] = useState<string>('');
 	const [isListView, setListView] = useState<boolean>(false);
@@ -32,6 +32,7 @@ function ProductsPage({products=[]}: InferGetStaticPropsType<typeof GetServerSid
 				skeleton
 				skeletonCount={4}
 				products={products}
+				giftAccount={giftAccount}
 				breakpoints={{ xl: 6, lg: 6, md: 6, sm: 12, xs: 24 }}
 			/>
 		</MainLayout>
@@ -40,6 +41,8 @@ function ProductsPage({products=[]}: InferGetStaticPropsType<typeof GetServerSid
 
 export const getServerSideProps: GetServerSideProps = async () => {
 	const {result} = await getJson(process.env.host+'/api/products/getProducts');
+	const marketing = await getJson(process.env.host+'/api/products/getMarketing');
+	
 	return {
 		props: {
 			products: result?.map((product: any) => ({
@@ -49,8 +52,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
 				image: product.image || null,
 				price: product.price,
 				weight: product.weight,
-				url: product.url
-			})) || []
+				url: product.url,
+				marketing_price: product.marketing_price
+			})) || [],
+			giftAccount: marketing?.result?.giftAccount||0
+
 		}
 	};
 };

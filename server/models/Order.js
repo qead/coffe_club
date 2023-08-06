@@ -10,7 +10,7 @@ const CartItemSchema = new Schema({
 export const StatusSchema = {
 	type: String,
 	default: 'Заказ создан',
-	enum: ['Заказ создан' , 'В обработке', 'Передано службе доставки', 'Заказ в пути', 'Доставлен', 'Отменен']
+	enum: ['Заказ создан', 'Передан', 'Отменен']
 };
 const schema = new Schema({
 	products: [CartItemSchema],
@@ -43,7 +43,8 @@ const schema = new Schema({
 	},
 	isProcessed:{type:Boolean, default: false},
 	price: Number,
-	status: StatusSchema
+	status: StatusSchema,
+	isGift:Boolean
 },
 {
 	timestamps: true

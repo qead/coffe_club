@@ -65,6 +65,8 @@ export default function Balance(ctx) {
 				<h1>Ваш баланс</h1>
 				<p>Основной счет: {balance.cash}</p>
 				<p>Подарочный счет: {balance.gift}</p>
+				<p>Бизнес-инструменты счет: {balance.businessTools}</p>
+				<p>Преображение счет: {balance.transfiguration}</p>
 				<Button onClick={getBalance} style={{margin:5}}>Обновить</Button> 
 				<Button onClick={()=>setTransferModal(true)} type="primary">Отправить средства</Button> 
 				{transferModal&& ModalProp({content:transferCashContent, modalProps: {

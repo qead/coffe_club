@@ -116,7 +116,7 @@ export const processReferralPayments = async () => {
 			processed.add(userId); // Mark the user as processed to avoid circular references
 			const user = await User.findById(userId);
 			if (!user) {
-				console.log('User not found');
+				console.log('getReferralUsers ~~~~User not found~~~');
 				throw new Error('User not found');
 			}
 			const { referralLink } = user;
@@ -125,9 +125,11 @@ export const processReferralPayments = async () => {
 			}
 			const referer = await User.findById(referralLink);
 			if (!referer) {
+				console.log('!referer конец поиска',referer.id);
 				return Array.from(referers);
 			}
-			if(!referer.monthly_spend ||!referer.monthly_spend.activityDate){
+			if(!referer.monthly_spend ||!referer.monthly_spend.activityDate){					
+				console.log('getReferralUsers ~~~~NO push to ref search next 1~~~ id:',referer.id);
 				await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers, processed);
 			}
 			// Check if the referer's activityDate is within the same month and year as the order_date
@@ -135,13 +137,15 @@ export const processReferralPayments = async () => {
 			if (moment(refererActivityDate).isSame(order_date, 'month') && moment(refererActivityDate).isSame(order_date, 'year')) {
 			// Check if the referer's monthly_spend is valid for the given activityPrice
 				if (!referer.monthly_spend || !referer.monthly_spend.amount || referer.monthly_spend.amount < activityPrice) {
+					console.log('getReferralUsers ~~~~NO push to ref search next 2~~~ id:',referer.id);
 					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers, processed);
 				} else {
+					console.log('getReferralUsers ~~~~push to ref~~~ id:',referer.id);
 					referers.add(referer); // Add the valid referer to the set
 					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers, processed);
 				}
 			} else {
-			// Check the activity in a different month for the referer
+				// Check the activity in a different month for the referer
 				const monthlySpend = await MonthlySpend.findOne({
 					userId: referer._id,
 					activityDate: {
@@ -150,8 +154,10 @@ export const processReferralPayments = async () => {
 					}
 				});
 				if (!monthlySpend || !monthlySpend.amount || monthlySpend.amount < activityPrice) {
+					console.log('getReferralUsers ~~~~ push to ref search next~~~ id:',referer.id);
 					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth, referers, processed);
 				} else {
+					console.log('getReferralUsers ~~~~ push to ref from another month~~~ id:',referer.id);
 					referers.add(referer); // Add the valid referer to the set
 					await getReferralUsers(order_date, referer._id, maxDepth, activityPrice, currentDepth + 1, referers, processed);
 				}

@@ -42,6 +42,7 @@ export default function RegistrationForm(){
 	const [referral, setReferral] = useState(null);
 	const [form] = Form.useForm();
 	const onFinish = async values => {
+		console.log('onFinish', values);
 		setLoading(true);
 		// delete values.agreement;
 		try {
@@ -74,13 +75,13 @@ export default function RegistrationForm(){
 			loading={loading+''}
 			initialValues={{
 				'country': 'Russian Federation',
-				'referralLink': referrer || null
+				'id': referrer || null
 			}}
 			style={{maxWidth:'500px', margin:'25px 0'}}
 		>
 			<Alert
 				message={referrer?'Успешно':'Внимание'}
-				description={referrer?'Поздравляем, кажется вы перешли по реферальной ссылке':'Отсутствуют данные реферала перейдите по ссылке для регистрации или введите айди вручную'}
+				description={referrer?'Поздравляем, кажется вы перешли по реферальной ссылке':'Отсутствуют данные реферала для регистрации необходимоо перейти по реф. ссылке действующего партнера'}
 				type={referrer?'success':'warning'}
 				showIcon
 				style={{marginBottom:'25px'}}
@@ -250,17 +251,17 @@ export default function RegistrationForm(){
 			<Form.Item style={{visibility:'hidden'}} extra="Согласно нашей политике, регистрация только с помощью рефералов, если вы перешли по реферальной ссылке не меняйте даннное значение">
 				<Form.Item
 					label={referrer?'Реферальный код уже успешно введен!':'Реферальный код'}
-					name="referralLink"
+					name="id"
 					rules={[
-						{ required: true, message: 'Пожалуйста укажите реферала!' },
-						({ getFieldValue }) => ({
-							validator(rule, value) {
-								if (!value || 24 === value.length) {
-									return Promise.resolve();
-								}
-								return Promise.reject('Введите корректный id');
-							}
-						})
+						{ required: true, message: 'Пожалуйста укажите реферала!' }
+						// ({ getFieldValue }) => ({
+						// 	validator(rule, value) {
+						// 		if (!value || 24 === value.length) {
+						// 			return Promise.resolve();
+						// 		}
+						// 		return Promise.reject('Введите корректный id');
+						// 	}
+						// })
 					]}
 				>
 					<Input disabled={referrer} value={referral} onChange={changeRef}  style={{width:'100%'}}/>

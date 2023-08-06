@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, message,Alert } from 'antd';
+import { Modal, message,Alert, Button } from 'antd';
 import { StarOutlined } from '@ant-design/icons';
 import CheckoutList from './CheckoutList';
 // import DeliveryAddress from './DeliveryAddress';
@@ -30,8 +30,9 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
 			setSubPrice(false);
 		}
 	};
-	const onOk  = async() =>{
-		const response = await getJson('/api/profile/createOrder',{items},message);
+	const onOk = async(isGift=false) =>{
+		console.log('onOk', isGift);
+		const response = await getJson('/api/profile/createOrder',{items,isGift},message);
 		if(response.status==200){
 			// message.success('Ваш заказ успешно сформирован!');
 			router.push('/shop/success_order');
@@ -47,7 +48,11 @@ const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
 		<Modal
 			title={subPrice?'Оплата ЛК':'Оформление заказа'}
 			visible={visible}
-			onOk={subPrice?paySub:onOk}
+			footer={[
+				<Button key="1" style={{margin:'5px 5px 0 0'}} type='primary' onClick={()=>subPrice?paySub():onOk()}>Оплатить</Button>,
+				<Button style={{margin:'5px 5px 0 0'}} key="2" onClick={()=>subPrice?paySub():onOk(true)}>Оплатить с подарочного счета</Button>,
+				<Button style={{margin:'5px 5px 0 0'}} key="3" onClick={hideModal}>Отмена</Button>
+			]}
 			okText={subPrice?'Оплатить подписку':'Оформить заказ'}
 			onCancel={hideModal}
 			closable={false}

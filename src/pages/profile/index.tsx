@@ -45,15 +45,16 @@ export default function Profile(ctx) {
 	useEffect ( async() => {
 		setLoading(true);
 		const userInfo = await getJson('/api/profile/getUser');
-		console.log('userInfo', userInfo);
 		if(userInfo?.result){
 		 	setState(userInfo.result);
 		}
 		setLoading(false);
 	}, [] );
 	useEffect(() => form.resetFields(), [state]);
-	const changeFormData = data =>{
-		console.log('data', data);
+	const updateUserData = async(data) =>{
+		setLoading(true);
+		await getJson('/api/profile/updateUser',data,message);
+		setLoading(false);
 	};
 	if(isAuth){
 		return (
@@ -65,9 +66,9 @@ export default function Profile(ctx) {
 					form={form}
 					name="register"
 					layout="vertical"
-					onFinish={changeFormData}
+					onFinish={updateUserData}
 					scrollToFirstError
-					loading={loading.toString()}
+					loading={loading}
 					initialValues={state.name&&{
 						'id': state.id,
 						'register': dateFromObjectId(state._id),

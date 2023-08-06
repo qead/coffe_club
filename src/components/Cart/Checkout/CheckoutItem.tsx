@@ -21,7 +21,7 @@ const CheckoutItem: React.FC<CheckoutItemProps> = ({ product }) => {
 		<div className="cart-item">
 			<ProductInfo product={product} />
 			<div className="quantity">{totalItemCount}</div>
-			<div className="subtotal">${subtotal}</div>
+			<div className="subtotal">₱{subtotal}</div>
 		</div>
 	);
 };

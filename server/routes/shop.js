@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const router = Router();
 const Product = require('../models/Product');
+const SiteConfig = require('../models/SiteConfig');
 const jwt = require('jsonwebtoken');
 
 router.use('/getProduct',
@@ -51,6 +52,18 @@ router.use('/getProducts',
 			console.log('error', error);
 			res.status(500).end('Что-то пошло не так');
 		}
-	});
+	}
+);
+
+router.use('/getMarketing', async(req,res)=>{
+	try {
+		let doc = await SiteConfig.findOne({}, {_id:0,__v: 0}).sort({_id:-1});
+		res.json(doc);
+	} catch (error) {
+		console.log('error', error);
+		res.status(500).end('Что-то пошло не так');
+	}
+});
+
 
 module.exports = router;
